@@ -6,12 +6,12 @@ import dev.lightdream.redismanager.manager.RedisManager;
 
 public interface RedisMain {
 
-    RedisEventManager getRedisEventManager();
-
     RedisManager getRedisManager();
 
     RedisConfig getRedisConfig();
 
     String getRedisID();
+
+    RedisEventManager getEventManager();
 
 }
