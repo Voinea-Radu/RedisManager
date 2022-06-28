@@ -37,7 +37,7 @@ public class RedisEvent {
     }
 
     public void fireEvent(RedisMain main) {
-        main.getEventManager().fire(this);
+        main.getRedisEventManager().fire(this);
     }
 
     @Override

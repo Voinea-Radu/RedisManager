@@ -12,6 +12,6 @@ public interface RedisMain {
 
     String getRedisID();
 
-    RedisEventManager getEventManager();
+    RedisEventManager getRedisEventManager();
 
 }
