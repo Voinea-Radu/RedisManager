@@ -5,7 +5,7 @@ import dev.lightdream.redismanager.utils.Utils;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
-public class RedisResponse {
+public class RedisResponse<T> {
 
     public int id;
     @Expose
@@ -36,7 +36,7 @@ public class RedisResponse {
     }
 
     @SuppressWarnings("unused")
-    public <T> T getResponse(Class<T> clazz) {
+    public <E> E getResponse(Class<E> clazz) {
         if (response == null) {
             return null;
         }

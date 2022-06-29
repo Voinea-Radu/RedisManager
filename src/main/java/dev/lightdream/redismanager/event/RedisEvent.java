@@ -6,7 +6,7 @@ import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.SneakyThrows;
 
-public class RedisEvent {
+public class RedisEvent<T> {
 
     public int id = -1;
     public String className;
@@ -27,8 +27,8 @@ public class RedisEvent {
 
     @SuppressWarnings("unchecked")
     @SneakyThrows
-    public Class<? extends RedisEvent> getClassByName() {
-        return (Class<? extends RedisEvent>) Class.forName(className);
+    public Class<? extends RedisEvent<T>> getClassByName() {
+        return (Class<? extends RedisEvent<T>>) Class.forName(className);
     }
 
     public void fireEvent(RedisMain main) {
@@ -40,26 +40,26 @@ public class RedisEvent {
         return Utils.toJson(this);
     }
 
-    public void respond(RedisMain main, Object response) {
+    public void respond(RedisMain main, T response) {
         new ResponseEvent(this, response).send(main);
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public RedisResponse send(RedisMain main) {
+    public RedisResponse<T> send(RedisMain main) {
         return main.getRedisManager().send(this);
     }
 
     @SuppressWarnings("unused")
     @SneakyThrows
-    public RedisResponse sendAndWait(RedisMain main) {
+    public RedisResponse<T> sendAndWait(RedisMain main) {
         return sendAndWait(main, Utils.defaultTimeout);
     }
 
     @SuppressWarnings("BusyWait")
     @SneakyThrows
-    public RedisResponse sendAndWait(RedisMain main, int timeout) {
+    public RedisResponse<T> sendAndWait(RedisMain main, int timeout) {
         int currentWait = 0;
-        RedisResponse response = send(main);
+        RedisResponse<T> response = send(main);
         while (!response.isFinished()) {
             Thread.sleep(Utils.defaultWaitBeforeIteration);
             currentWait += Utils.defaultWaitBeforeIteration;
