@@ -31,6 +31,11 @@ public class RedisEvent<T> {
         return (Class<? extends RedisEvent<T>>) Class.forName(className);
     }
 
+    /**
+     * Fires the event (interanlly)
+     * Does NOT send it to the redis target
+     * @param main RedisMain main instance
+     */
     public void fireEvent(RedisMain main) {
         main.getRedisEventManager().fire(this);
     }
@@ -44,6 +49,11 @@ public class RedisEvent<T> {
         new ResponseEvent(this, response).send(main);
     }
 
+    /**
+     * Send the event through the redis manager to the target
+     * @param main RedisMain main instance
+     * @return response
+     */
     @SuppressWarnings("UnusedReturnValue")
     public RedisResponse<T> send(RedisMain main) {
         return main.getRedisManager().send(this);
