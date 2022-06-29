@@ -61,7 +61,7 @@ public class RedisManager {
                     if (response == null) {
                         return;
                     }
-                    response.respond(responseEvent.response);
+                    response.respondUnsafe(responseEvent.response);
                     return;
                 }
 
