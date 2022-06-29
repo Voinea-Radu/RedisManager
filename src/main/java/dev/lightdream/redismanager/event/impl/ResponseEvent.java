@@ -5,7 +5,7 @@ import dev.lightdream.redismanager.utils.Utils;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
-public class ResponseEvent extends RedisEvent {
+public class ResponseEvent extends RedisEvent<Object> {
 
     public String response;
 
