@@ -6,7 +6,7 @@ import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.SneakyThrows;
 
-public class RedisEvent {
+public class RedisEvent<T> {
 
     public int id = -1;
     public String className;
@@ -31,6 +31,11 @@ public class RedisEvent {
         return (Class<? extends RedisEvent>) Class.forName(className);
     }
 
+    /**
+     * Fires the event (interanlly)
+     * Does NOT send it to the redis target
+     * @param main RedisMain main instance
+     */
     public void fireEvent(RedisMain main) {
         main.getRedisEventManager().fire(this);
     }
@@ -40,10 +45,15 @@ public class RedisEvent {
         return Utils.toJson(this);
     }
 
-    public void respond(RedisMain main, Object response) {
+    public void respond(RedisMain main, T response) {
         new ResponseEvent(this, response).send(main);
     }
 
+    /**
+     * Send the event through the redis manager to the target
+     * @param main RedisMain main instance
+     * @return response
+     */
     @SuppressWarnings("UnusedReturnValue")
     public RedisResponse send(RedisMain main) {
         return main.getRedisManager().send(this);
