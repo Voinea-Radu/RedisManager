@@ -10,9 +10,9 @@ public class RedisResponse<T> {
 
     public int id;
     @Expose
-    private String response;
+    private T response;
     @Expose
-    private String responseClass;
+    private String responseClassName;
     private boolean finished = false;
     private boolean timeout = false;
 
@@ -34,39 +34,44 @@ public class RedisResponse<T> {
         return timeout;
     }
 
-    public void respond(T object) {
-        this.response = Utils.toJson(object);
-        this.responseClass = object.getClass().getName();
+    public void respond(T object, String responseClass) {
+        this.response = object;
+        this.responseClassName = responseClass;
         markAsFinished();
     }
 
-    @SuppressWarnings("unchecked")
-    public void respondUnsafe(Object object) {
-        respond((T) object);
+    public void respondUnsafe(String objectJson, String responseClass) {
+        this.responseClassName = responseClass;
+        T object = Utils.fromJson(objectJson, getResponseClassName());
+        respond(object, responseClass);
     }
 
-    @SuppressWarnings("unused")
-    public <E> E getResponse(Class<E> clazz) {
-        if (response == null) {
-            return null;
-        }
-        return Utils.fromJson(response.replace("\\\"", "\\").replace("\"", "").replace("\\", "\""), clazz);
-    }
+    //@SuppressWarnings("unused")
+    //public <E> E getResponse(Class<E> clazz) {
+    //    if (response == null) {
+    //        return null;
+    //    }
+    //    return Utils.fromJson(response.replace("\\\"", "\\").replace("\"", "").replace("\\", "\""), clazz);
+    //}
 
-    public T getResponse() {
-        if (response == null) {
-            return null;
-        }
-        return Utils.fromJson(response.replace("\\\"", "\\").replace("\"", "").replace("\\", "\""), getResponseClass());
+    //public T getResponse() {
+    //    if (response == null) {
+    //        return null;
+    //    }
+    //    return Utils.fromJson(response.replace("\\\"", "\\").replace("\"", "").replace("\\", "\""), getResponseClass());
+    //}
+
+    public T getResponse(){
+        return response;
     }
 
     @SuppressWarnings("unchecked")
     @SneakyThrows
-    public Class<T> getResponseClass() {
-        if (responseClass == null) {
+    public Class<T> getResponseClassName() {
+        if (responseClassName == null) {
             return null;
         }
-        return (Class<T>) Class.forName(responseClass);
+        return (Class<T>) Class.forName(responseClassName);
     }
 
     public boolean isFinished() {
@@ -76,5 +81,16 @@ public class RedisResponse<T> {
     @Override
     public String toString() {
         return Utils.toJson(this);
+    }
+
+
+    public String toStringUnsafe() {
+        return "RedisResponse{" +
+                "id=" + id +
+                ", response=" + response +
+                ", responseClass='" + responseClassName + '\'' +
+                ", finished=" + finished +
+                ", timeout=" + timeout +
+                '}';
     }
 }

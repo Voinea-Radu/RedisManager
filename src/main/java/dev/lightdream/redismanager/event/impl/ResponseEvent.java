@@ -1,5 +1,6 @@
 package dev.lightdream.redismanager.event.impl;
 
+import com.google.gson.annotations.Expose;
 import dev.lightdream.redismanager.event.RedisEvent;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.NoArgsConstructor;
@@ -8,11 +9,13 @@ import lombok.NoArgsConstructor;
 public class ResponseEvent extends RedisEvent<Object> {
 
     public String response;
+    public String responseClassName;
 
-    public ResponseEvent(RedisEvent command, Object response) {
+    public ResponseEvent(RedisEvent<?> command, Object response) {
         super(command.originator);
         this.id = command.id;
         this.response = Utils.toJson(response);
+        this.responseClassName = response.getClass().getName();
     }
 
 }

@@ -46,7 +46,7 @@ public class RedisManager {
 
             @SuppressWarnings("unchecked")
             @Override
-            public void onMessage(String channel, String command) {
+            public void onMessage(String channel, final String command) {
                 Class<? extends RedisEvent<?>> clazz = Utils.fromJson(command, RedisEvent.class).getClassByName();
 
                 if (clazz.equals(ResponseEvent.class)) {
@@ -61,7 +61,8 @@ public class RedisManager {
                     if (response == null) {
                         return;
                     }
-                    response.respondUnsafe(responseEvent.response);
+                    response.respondUnsafe(responseEvent.response, responseEvent.responseClassName);
+
                     return;
                 }
 
@@ -115,6 +116,7 @@ public class RedisManager {
 
         if (command instanceof ResponseEvent) {
             Debugger.info("[Send-Response      ] [" + main.getRedisConfig().channel + "] " + command);
+
             jedis.publish(main.getRedisConfig().channel, command.toString());
             return null;
         }

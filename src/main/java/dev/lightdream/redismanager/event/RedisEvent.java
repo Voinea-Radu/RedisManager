@@ -32,7 +32,7 @@ public class RedisEvent<T> {
     }
 
     /**
-     * Fires the event (interanlly)
+     * Fires the event (internally)
      * Does NOT send it to the redis target
      * @param main RedisMain main instance
      */
@@ -45,6 +45,7 @@ public class RedisEvent<T> {
         return Utils.toJson(this);
     }
 
+    @SuppressWarnings("unused")
     public void respond(RedisMain main, T response) {
         new ResponseEvent(this, response).send(main);
     }
