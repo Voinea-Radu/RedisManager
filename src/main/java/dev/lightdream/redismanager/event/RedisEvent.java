@@ -66,7 +66,7 @@ public class RedisEvent<T> {
     @SuppressWarnings("unused")
     @SneakyThrows
     public RedisResponse<T> sendAndWait(RedisMain main) {
-        return sendAndWait(main, Utils.defaultTimeout);
+        return sendAndWait(main, main.getTimeout());
     }
 
     @SuppressWarnings("BusyWait")
@@ -75,8 +75,8 @@ public class RedisEvent<T> {
         int currentWait = 0;
         RedisResponse<T> response = send(main);
         while (!response.isFinished()) {
-            Thread.sleep(Utils.defaultWaitBeforeIteration);
-            currentWait += Utils.defaultWaitBeforeIteration;
+            Thread.sleep(main.getWaitBeforeIteration());
+            currentWait += main.getWaitBeforeIteration();
             if (currentWait > timeout) {
                 response.timeout();
                 break;
