@@ -43,8 +43,6 @@ public class RedisResponse<T> {
 
     public void respondUnsafe(String objectJson, String responseClass) {
         this.responseClassName = responseClass;
-        Debugger.log("Deserializing response: " + objectJson);
-        Debugger.log("Deserializing as class: " + getResponseClassName());
         T object = Utils.fromJson(objectJson, getResponseClassName());
         respond(object, responseClass);
     }
