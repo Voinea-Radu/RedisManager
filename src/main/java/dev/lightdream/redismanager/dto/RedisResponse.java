@@ -1,6 +1,7 @@
 package dev.lightdream.redismanager.dto;
 
 import com.google.gson.annotations.Expose;
+import dev.lightdream.logger.Debugger;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -42,24 +43,11 @@ public class RedisResponse<T> {
 
     public void respondUnsafe(String objectJson, String responseClass) {
         this.responseClassName = responseClass;
+        Debugger.log("Deserializing response: " + objectJson);
+        Debugger.log("Deserializing as class: " + getResponseClassName());
         T object = Utils.fromJson(objectJson, getResponseClassName());
         respond(object, responseClass);
     }
-
-    //@SuppressWarnings("unused")
-    //public <E> E getResponse(Class<E> clazz) {
-    //    if (response == null) {
-    //        return null;
-    //    }
-    //    return Utils.fromJson(response.replace("\\\"", "\\").replace("\"", "").replace("\\", "\""), clazz);
-    //}
-
-    //public T getResponse() {
-    //    if (response == null) {
-    //        return null;
-    //    }
-    //    return Utils.fromJson(response.replace("\\\"", "\\").replace("\"", "").replace("\\", "\""), getResponseClass());
-    //}
 
     public T getResponse(){
         return response;

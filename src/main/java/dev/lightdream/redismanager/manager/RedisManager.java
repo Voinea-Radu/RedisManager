@@ -23,10 +23,11 @@ public class RedisManager {
     public Jedis jedis;
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
+    private boolean disabledDebug = false;
 
     public RedisManager(RedisMain main) {
         this.main = main;
-        Debugger.info("Creating RedisManager with listenID: " + main.getRedisID());
+        debug("Creating RedisManager with listenID: " + main.getRedisID());
         this.jedis = new Jedis(main.getRedisConfig().host, main.getRedisConfig().port);
         this.jedis.auth(main.getRedisConfig().username, main.getRedisConfig().password);
 
@@ -34,6 +35,16 @@ public class RedisManager {
         this.subscriberJedis.auth(main.getRedisConfig().username, main.getRedisConfig().password);
 
         subscribe();
+    }
+
+    public void disableDebugMessage(){
+        disabledDebug = true;
+    }
+
+    private void debug(String s){
+        if(!disabledDebug){
+            Debugger.info(s);
+        }
     }
 
     @Nullable
@@ -52,11 +63,11 @@ public class RedisManager {
                 if (clazz.equals(ResponseEvent.class)) {
                     ResponseEvent responseEvent = Utils.fromJson(command, ResponseEvent.class);
                     if (!responseEvent.redisTarget.equals(main.getRedisID())) {
-                        Debugger.info("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
+                        debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                         return;
                     }
 
-                    Debugger.info("[Receive-Response   ] [" + channel + "] " + command);
+                    debug("[Receive-Response   ] [" + channel + "] " + command);
                     RedisResponse<?> response = getResponse(responseEvent);
                     if (response == null) {
                         return;
@@ -68,21 +79,21 @@ public class RedisManager {
 
                 RedisEvent<?> redisEvent = Utils.fromJson(command, clazz);
                 if (!redisEvent.redisTarget.equals(main.getRedisID())) {
-                    Debugger.info("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
+                    debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                     return;
                 }
-                Debugger.info("[Receive            ] [" + channel + "] " + command);
+                debug("[Receive            ] [" + channel + "] " + command);
                 redisEvent.fireEvent(main);
             }
 
             @Override
             public void onSubscribe(String channel, int subscribedChannels) {
-                Debugger.info("Subscribed to channel " + channel);
+                debug("Subscribed to channel " + channel);
             }
 
             @Override
             public void onUnsubscribe(String channel, int subscribedChannels) {
-                Debugger.info("Unsubscribed from channel " + channel);
+                debug("Unsubscribed from channel " + channel);
             }
 
         };
@@ -115,14 +126,14 @@ public class RedisManager {
         command.originator = main.getRedisID();
 
         if (command instanceof ResponseEvent) {
-            Debugger.info("[Send-Response      ] [" + main.getRedisConfig().channel + "] " + command);
+            debug("[Send-Response      ] [" + main.getRedisConfig().channel + "] " + command);
 
             jedis.publish(main.getRedisConfig().channel, command.toString());
             return null;
         }
 
         command.id = ++id;
-        Debugger.info("[Send               ] [" + main.getRedisConfig().channel + "] " + command);
+        debug("[Send               ] [" + main.getRedisConfig().channel + "] " + command);
 
         RedisResponse<T> redisResponse = new RedisResponse<>(command.id);
         jedis.publish(main.getRedisConfig().channel, command.toString());

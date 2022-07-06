@@ -1,5 +1,6 @@
 package dev.lightdream.redismanager.event;
 
+import dev.lightdream.logger.Debugger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
@@ -34,6 +35,7 @@ public class RedisEvent<T> {
     /**
      * Fires the event (internally)
      * Does NOT send it to the redis target
+     *
      * @param main RedisMain main instance
      */
     public void fireEvent(RedisMain main) {
@@ -52,6 +54,7 @@ public class RedisEvent<T> {
 
     /**
      * Send the event through the redis manager to the target
+     *
      * @param main RedisMain main instance
      * @return response
      */
