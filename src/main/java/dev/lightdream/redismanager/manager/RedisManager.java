@@ -109,6 +109,9 @@ public class RedisManager {
             } catch (Exception e) {
                 LambdaExecutor.LambdaCatch.NoReturnLambdaCatch.executeCatch(() -> {
                     Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
+                    if(Debugger.isEnabled()){
+                        e.printStackTrace();
+                    }
                     Thread.sleep(3000);
                     Logger.good("Reconnected to redis server.");
                     startRedisThread();

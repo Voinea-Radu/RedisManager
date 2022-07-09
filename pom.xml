@@ -6,7 +6,7 @@
 
     <groupId>dev.lightdream</groupId>
     <artifactId>RedisManager</artifactId>
-    <version>1.4.0</version>
+    <version>1.4.2</version>
 
     <distributionManagement>
         <repository>
