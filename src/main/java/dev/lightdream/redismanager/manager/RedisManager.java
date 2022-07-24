@@ -77,13 +77,15 @@ public class RedisManager {
                     return;
                 }
 
-                RedisEvent<?> redisEvent = Utils.fromJson(command, clazz);
-                if (!redisEvent.redisTarget.equals(main.getRedisID())) {
-                    debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
-                    return;
-                }
-                debug("[Receive            ] [" + channel + "] " + command);
-                redisEvent.fireEvent(main);
+                new Thread(()->{
+                    RedisEvent<?> redisEvent = Utils.fromJson(command, clazz);
+                    if (!redisEvent.redisTarget.equals(main.getRedisID())) {
+                        debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
+                        return;
+                    }
+                    debug("[Receive            ] [" + channel + "] " + command);
+                    redisEvent.fireEvent(main);
+                }).start();
             }
 
             @Override
