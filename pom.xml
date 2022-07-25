@@ -33,6 +33,10 @@
             <id>jetbrains</id>
             <url>https://mvnrepository.com/artifact/org.jetbrains/annotations</url>
         </repository>
+        <repository>
+            <id>jupiter</id>
+            <url>https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -80,6 +84,15 @@
             <artifactId>Lambda</artifactId>
             <version>LATEST</version>
         </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.0-RC1</version>
+            <scope>test</scope>
+        </dependency>
+
 
     </dependencies>
 

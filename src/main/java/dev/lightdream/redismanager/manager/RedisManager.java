@@ -21,6 +21,7 @@ public class RedisManager {
     private final List<RedisResponse<?>> awaitingResponses = new ArrayList<>();
     private final RedisMain main;
     public Jedis jedis;
+    public Thread redisTread = null;
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
     private boolean disabledDebug = false;
@@ -37,12 +38,12 @@ public class RedisManager {
         subscribe();
     }
 
-    public void disableDebugMessage(){
+    public void disableDebugMessage() {
         disabledDebug = true;
     }
 
-    private void debug(String s){
-        if(!disabledDebug){
+    private void debug(String s) {
+        if (!disabledDebug) {
             Debugger.info(s);
         }
     }
@@ -77,7 +78,7 @@ public class RedisManager {
                     return;
                 }
 
-                new Thread(()->{
+                new Thread(() -> {
                     RedisEvent<?> redisEvent = Utils.fromJson(command, clazz);
                     if (!redisEvent.redisTarget.equals(main.getRedisID())) {
                         debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
@@ -105,13 +106,16 @@ public class RedisManager {
     }
 
     public void startRedisThread() {
-        new Thread(() -> {
+        if (redisTread != null) {
+            redisTread.interrupt();
+        }
+        redisTread = new Thread(() -> {
             try {
                 subscriberJedis.subscribe(subscriberJedisPubSub, main.getRedisConfig().channel);
             } catch (Exception e) {
                 LambdaExecutor.LambdaCatch.NoReturnLambdaCatch.executeCatch(() -> {
                     Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
-                    if(Debugger.isEnabled()){
+                    if (Debugger.isEnabled()) {
                         e.printStackTrace();
                     }
                     Thread.sleep(3000);
@@ -119,7 +123,8 @@ public class RedisManager {
                     startRedisThread();
                 });
             }
-        }).start();
+        });
+        redisTread.start();
     }
 
     @SuppressWarnings("unused")
