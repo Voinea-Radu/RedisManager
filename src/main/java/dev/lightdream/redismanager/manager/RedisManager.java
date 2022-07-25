@@ -17,11 +17,11 @@ import java.util.List;
 
 public class RedisManager {
 
-    private final Jedis subscriberJedis;
     private final List<RedisResponse<?>> awaitingResponses = new ArrayList<>();
     private final RedisMain main;
     public Jedis jedis;
     public Thread redisTread = null;
+    private Jedis subscriberJedis;
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
     private boolean disabledDebug = false;
@@ -29,13 +29,29 @@ public class RedisManager {
     public RedisManager(RedisMain main) {
         this.main = main;
         debug("Creating RedisManager with listenID: " + main.getRedisID());
+
+        connectJedis();
+        connectSubscriberJedis();
+
+        subscribe();
+    }
+
+    private void connectJedis() {
+        if (jedis != null && jedis.isConnected()) {
+            jedis.disconnect();
+        }
+
         this.jedis = new Jedis(main.getRedisConfig().host, main.getRedisConfig().port);
         this.jedis.auth(main.getRedisConfig().username, main.getRedisConfig().password);
+    }
+
+    private void connectSubscriberJedis() {
+        if (subscriberJedis != null && subscriberJedis.isConnected()) {
+            subscriberJedis.disconnect();
+        }
 
         this.subscriberJedis = new Jedis(main.getRedisConfig().host, main.getRedisConfig().port);
         this.subscriberJedis.auth(main.getRedisConfig().username, main.getRedisConfig().password);
-
-        subscribe();
     }
 
     public void disableDebugMessage() {
@@ -138,7 +154,13 @@ public class RedisManager {
         if (command instanceof ResponseEvent) {
             debug("[Send-Response      ] [" + main.getRedisConfig().channel + "] " + command);
 
-            jedis.publish(main.getRedisConfig().channel, command.toString());
+            try {
+                jedis.publish(main.getRedisConfig().channel, command.toString());
+            } catch (Exception e) {
+                if (Debugger.isEnabled()) {
+                    e.printStackTrace();
+                }
+            }
             return null;
         }
 
