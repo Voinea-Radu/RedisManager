@@ -1,6 +1,5 @@
 package dev.lightdream.redismanager.event;
 
-import dev.lightdream.logger.Debugger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
@@ -82,6 +81,9 @@ public class RedisEvent<T> {
                 break;
             }
         }
+
+        //TODO: Maybe implement logic for trying again, however for now simply remove the response afterwards
+        main.getRedisManager().getAwaitingResponses().remove(response);
 
         return response;
     }

@@ -1,6 +1,5 @@
 package dev.lightdream.redismanager.event.impl;
 
-import com.google.gson.annotations.Expose;
 import dev.lightdream.redismanager.event.RedisEvent;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.NoArgsConstructor;

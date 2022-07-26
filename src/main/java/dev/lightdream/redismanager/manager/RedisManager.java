@@ -10,18 +10,20 @@ import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import dev.lightdream.redismanager.utils.Utils;
 import org.jetbrains.annotations.Nullable;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisManager {
 
-    private final List<RedisResponse<?>> awaitingResponses = new ArrayList<>();
+    private final Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
     private final RedisMain main;
-    public Jedis jedis;
+    public JedisPool jedisPool;
     public Thread redisTread = null;
-    private Jedis subscriberJedis;
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
     private boolean disabledDebug = false;
@@ -31,27 +33,18 @@ public class RedisManager {
         debug("Creating RedisManager with listenID: " + main.getRedisID());
 
         connectJedis();
-        connectSubscriberJedis();
-
         subscribe();
     }
 
     private void connectJedis() {
-        if (jedis != null && jedis.isConnected()) {
-            jedis.disconnect();
+        if (jedisPool != null) {
+            jedisPool.destroy();
         }
 
-        this.jedis = new Jedis(main.getRedisConfig().host, main.getRedisConfig().port);
-        this.jedis.auth(main.getRedisConfig().username, main.getRedisConfig().password);
-    }
+        JedisPoolConfig config = new JedisPoolConfig();
+        config.setMaxTotal(16);
 
-    private void connectSubscriberJedis() {
-        if (subscriberJedis != null && subscriberJedis.isConnected()) {
-            subscriberJedis.disconnect();
-        }
-
-        this.subscriberJedis = new Jedis(main.getRedisConfig().host, main.getRedisConfig().port);
-        this.subscriberJedis.auth(main.getRedisConfig().username, main.getRedisConfig().password);
+        this.jedisPool = new JedisPool(config, main.getRedisConfig().host, main.getRedisConfig().port, 0, main.getRedisConfig().password);
     }
 
     public void disableDebugMessage() {
@@ -66,7 +59,14 @@ public class RedisManager {
 
     @Nullable
     private RedisResponse<?> getResponse(ResponseEvent command) {
-        return awaitingResponses.stream().filter(response -> response.id == command.id).findAny().orElse(null);
+        //Remove streams, these are slow when called a lot
+        for (RedisResponse response : awaitingResponses) {
+            if (response.id == command.id) {
+                return response;
+            }
+        }
+
+        return null;
     }
 
     private void subscribe() {
@@ -75,6 +75,10 @@ public class RedisManager {
             @SuppressWarnings("unchecked")
             @Override
             public void onMessage(String channel, final String command) {
+                if (command.trim().length() == 0) {
+                    return;
+                }
+
                 Class<? extends RedisEvent<?>> clazz = Utils.fromJson(command, RedisEvent.class).getClassByName();
 
                 if (clazz.equals(ResponseEvent.class)) {
@@ -126,7 +130,7 @@ public class RedisManager {
             redisTread.interrupt();
         }
         redisTread = new Thread(() -> {
-            try {
+            try (Jedis subscriberJedis = jedisPool.getResource()) {
                 subscriberJedis.subscribe(subscriberJedisPubSub, main.getRedisConfig().channel);
             } catch (Exception e) {
                 LambdaExecutor.LambdaCatch.NoReturnLambdaCatch.executeCatch(() -> {
@@ -154,13 +158,14 @@ public class RedisManager {
         if (command instanceof ResponseEvent) {
             debug("[Send-Response      ] [" + main.getRedisConfig().channel + "] " + command);
 
-            try {
+            try (Jedis jedis = jedisPool.getResource()) {
                 jedis.publish(main.getRedisConfig().channel, command.toString());
             } catch (Exception e) {
                 if (Debugger.isEnabled()) {
                     e.printStackTrace();
                 }
             }
+
             return null;
         }
 
@@ -168,11 +173,19 @@ public class RedisManager {
         debug("[Send               ] [" + main.getRedisConfig().channel + "] " + command);
 
         RedisResponse<T> redisResponse = new RedisResponse<>(command.id);
-        jedis.publish(main.getRedisConfig().channel, command.toString());
-
         awaitingResponses.add(redisResponse);
 
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.publish(main.getRedisConfig().channel, command.toString());
+        } catch (JedisConnectionException e) {
+            throw new RuntimeException("Unable to publish channel message", e);
+        }
+
         return redisResponse;
+    }
+
+    public Queue<RedisResponse<?>> getAwaitingResponses() {
+        return awaitingResponses;
     }
 
 

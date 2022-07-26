@@ -1,7 +1,6 @@
 package dev.lightdream.redismanager.dto;
 
 import com.google.gson.annotations.Expose;
-import dev.lightdream.logger.Debugger;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -47,7 +46,7 @@ public class RedisResponse<T> {
         respond(object, responseClass);
     }
 
-    public T getResponse(){
+    public T getResponse() {
         return response;
     }
 
