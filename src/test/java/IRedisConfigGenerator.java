@@ -2,7 +2,7 @@ import dev.lightdream.redismanager.dto.RedisConfig;
 
 public interface IRedisConfigGenerator {
 
-    default RedisConfig generateConfig(){
+    default RedisConfig generateConfig() {
         return generate();
     }
 

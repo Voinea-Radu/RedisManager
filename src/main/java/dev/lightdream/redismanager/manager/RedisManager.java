@@ -1,6 +1,5 @@
 package dev.lightdream.redismanager.manager;
 
-import dev.lightdream.lambda.LambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
@@ -133,17 +132,17 @@ public class RedisManager {
             try (Jedis subscriberJedis = jedisPool.getResource()) {
                 subscriberJedis.subscribe(subscriberJedisPubSub, main.getRedisConfig().channel);
             } catch (Exception e) {
-                    Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
-                    if (Debugger.isEnabled()) {
-                        e.printStackTrace();
-                    }
+                Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
+                if (Debugger.isEnabled()) {
+                    e.printStackTrace();
+                }
                 try {
                     Thread.sleep(3000);
                 } catch (InterruptedException ignored) {
 
                 }
                 Logger.good("Reconnected to redis server.");
-                    startRedisThread();
+                startRedisThread();
             }
         });
         redisTread.start();
