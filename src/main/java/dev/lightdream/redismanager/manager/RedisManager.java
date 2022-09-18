@@ -133,15 +133,17 @@ public class RedisManager {
             try (Jedis subscriberJedis = jedisPool.getResource()) {
                 subscriberJedis.subscribe(subscriberJedisPubSub, main.getRedisConfig().channel);
             } catch (Exception e) {
-                LambdaExecutor.LambdaCatch.NoReturnLambdaCatch.executeCatch(() -> {
                     Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
                     if (Debugger.isEnabled()) {
                         e.printStackTrace();
                     }
+                try {
                     Thread.sleep(3000);
-                    Logger.good("Reconnected to redis server.");
+                } catch (InterruptedException ignored) {
+
+                }
+                Logger.good("Reconnected to redis server.");
                     startRedisThread();
-                });
             }
         });
         redisTread.start();

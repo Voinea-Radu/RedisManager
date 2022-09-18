@@ -6,7 +6,7 @@
 
     <groupId>dev.lightdream</groupId>
     <artifactId>RedisManager</artifactId>
-    <version>1.4.5</version>
+    <version>1.4.6</version>
 
     <distributionManagement>
         <repository>
@@ -70,7 +70,6 @@
             <artifactId>annotations</artifactId>
             <version>23.0.0</version>
         </dependency>
-
 
         <!-- LightDream -->
 
