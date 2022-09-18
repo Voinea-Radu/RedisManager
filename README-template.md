@@ -3,7 +3,7 @@
 ![Build](../../actions/workflows/build.yml/badge.svg)
 ![Version](https://img.shields.io/badge/Version-${{ env.VERSION }}-red.svg)
 
-A logger lib that allows the separation of debugging logs and production logs.
+A lib that allows the creation of redis events to facilitate inter server communication.
 
 ## Use
 
