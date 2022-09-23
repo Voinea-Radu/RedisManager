@@ -14,7 +14,7 @@ A lib that allows the creation of redis events to facilitate inter server commun
 <repositories>
     <repository>
         <id>lightdream-repo</id>
-        <url>https://repo.lightdream.dev/repository/LightDream-API/</url>
+        <url>https://repo.lightdream.dev/</url>
     </repository>
     <!-- Other repositories -->
 </repositories>
@@ -36,7 +36,7 @@ A lib that allows the creation of redis events to facilitate inter server commun
 
 ```groovy
 repositories {
-    maven { url "https://repo.lightdream.dev/repository/LightDream-API/" }
+    maven { url "https://repo.lightdream.dev/" }
 
     // Other repositories
 }
