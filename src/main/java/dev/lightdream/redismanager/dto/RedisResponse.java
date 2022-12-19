@@ -46,6 +46,7 @@ public class RedisResponse<T> {
         respond(object, responseClass);
     }
 
+    @SuppressWarnings("unused")
     public T getResponse() {
         return response;
     }
@@ -69,6 +70,7 @@ public class RedisResponse<T> {
     }
 
 
+    @SuppressWarnings("unused")
     public String toStringUnsafe() {
         return "RedisResponse{" +
                 "id=" + id +

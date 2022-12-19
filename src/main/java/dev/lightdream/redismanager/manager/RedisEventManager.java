@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("rawtypes")
 public class RedisEventManager {
 
     private final List<EventMapper> eventMappers = new ArrayList<>();
@@ -16,6 +17,7 @@ public class RedisEventManager {
 
     }
 
+    @SuppressWarnings("unused")
     public void register(Object object) {
         getEventMapper(object).register();
     }

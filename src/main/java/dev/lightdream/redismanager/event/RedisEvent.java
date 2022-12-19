@@ -62,7 +62,7 @@ public class RedisEvent<T> {
         return main.getRedisManager().send(this);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "UnusedReturnValue"})
     @SneakyThrows
     public RedisResponse<T> sendAndWait(RedisMain main) {
         return sendAndWait(main, main.getTimeout());

@@ -6,12 +6,12 @@
 
     <groupId>dev.lightdream</groupId>
     <artifactId>RedisManager</artifactId>
-    <version>1.4.6</version>
+    <version>1.4.7</version>
 
     <distributionManagement>
         <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/releases/</url>
+            <id>gitlab-maven</id>
+            <url>https://repo.lightdream.dev/</url>
         </repository>
     </distributionManagement>
 
