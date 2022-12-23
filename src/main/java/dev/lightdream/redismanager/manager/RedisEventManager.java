@@ -33,7 +33,7 @@ public class RedisEventManager {
         }
 
         if (mapper == null) {
-            mapper = new EventMapper(method.getDeclaringClass().newInstance());
+            mapper = new EventMapper(method.getDeclaringClass());
             eventMappers.add(mapper);
         }
 
@@ -53,6 +53,11 @@ public class RedisEventManager {
 
         public EventMapper(Object object) {
             this.object = object;
+        }
+
+        @SneakyThrows
+        public EventMapper(Class<?> clazz) {
+            this.object = clazz.getConstructor().newInstance();
         }
 
         public void register(Method method) {
