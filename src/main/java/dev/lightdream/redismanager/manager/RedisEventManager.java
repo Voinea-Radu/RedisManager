@@ -1,8 +1,10 @@
 package dev.lightdream.redismanager.manager;
 
+import dev.lightdream.lambda.reflection.Reflector;
+import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
-import dev.lightdream.redismanager.utils.ReflectionHelper;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -11,28 +13,33 @@ import java.util.List;
 @SuppressWarnings("rawtypes")
 public class RedisEventManager {
 
-    private final List<EventMapper> eventMappers = new ArrayList<>();
+    public List<EventMapper> eventMappers = new ArrayList<>();
 
-    public RedisEventManager() {
-
+    public RedisEventManager(RedisMain main) {
+        new Reflector(main, main.getPackage())
+                .getMethodsAnnotatedWith(RedisEventHandler.class)
+                .forEach(this::register);
     }
 
-    @SuppressWarnings("unused")
-    public void register(Object object) {
-        getEventMapper(object).register();
-    }
+    @SneakyThrows
+    public void register(Method method) {
+        EventMapper mapper = null;
 
-    public EventMapper getEventMapper(Object object) {
         for (EventMapper eventMapper : eventMappers) {
-            if (eventMapper.object == object) {
-                return eventMapper;
+            if (eventMapper.object.getClass().equals(method.getDeclaringClass())) {
+                mapper = eventMapper;
+                break;
             }
         }
 
-        EventMapper eventMapper = new EventMapper(object);
-        eventMappers.add(eventMapper);
-        return eventMapper;
+        if (mapper == null) {
+            mapper = new EventMapper(method.getDeclaringClass().newInstance());
+            eventMappers.add(mapper);
+        }
+
+        mapper.register(method);
     }
+
 
     public void fire(RedisEvent event) {
         for (EventMapper eventMapper : eventMappers) {
@@ -41,33 +48,28 @@ public class RedisEventManager {
     }
 
     public static class EventMapper {
-
         private final Object object;
-        private final List<EventMethod> eventMethods;
+        private final List<EventMethod> eventMethods = new ArrayList<>();
 
         public EventMapper(Object object) {
             this.object = object;
-            this.eventMethods = new ArrayList<>();
         }
 
-        public void register() {
-            ReflectionHelper.getMethodsAnnotatedWith(object.getClass(), RedisEventHandler.class).forEach(method -> {
-                if (method.getParameters().length == 0) {
-                    return;
-                }
+        public void register(Method method) {
+            if (method.getParameters().length == 0) {
+                return;
+            }
 
-                Class<?> eventClassUnchecked = method.getParameters()[0].getType();
-                Class<? extends RedisEvent> eventClass;
+            Class<?> eventClassUnchecked = method.getParameters()[0].getType();
 
-                try {
-                    //noinspection unchecked
-                    eventClass = (Class<? extends RedisEvent>) eventClassUnchecked;
-                } catch (Exception e) {
-                    return;
-                }
+            if (RedisEvent.class.isAssignableFrom(eventClassUnchecked)) {
+                return;
+            }
 
-                getEventMethod(eventClass).addMethod(method);
-            });
+            //noinspection unchecked
+            Class<? extends RedisEvent> eventClass = (Class<? extends RedisEvent>) eventClassUnchecked;
+
+            getEventMethod(eventClass).addMethod(method);
         }
 
         public EventMethod getEventMethod(Class<? extends RedisEvent> clazz) {
@@ -84,14 +86,6 @@ public class RedisEventManager {
 
         public void fire(RedisEvent event) {
             getEventMethod(event.getClass()).fire(object, event);
-        }
-
-        @Override
-        public String toString() {
-            return "EventMapper{" +
-                    "object=" + object +
-                    ", eventMethods=" + eventMethods +
-                    '}';
         }
     }
 

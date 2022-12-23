@@ -6,7 +6,7 @@
 
     <groupId>dev.lightdream</groupId>
     <artifactId>RedisManager</artifactId>
-    <version>1.4.7</version>
+    <version>1.5.0</version>
 
     <distributionManagement>
         <repository>
@@ -81,18 +81,8 @@
         <dependency>
             <groupId>dev.lightdream</groupId>
             <artifactId>Lambda</artifactId>
-            <version>2.0.0</version>
+            <version>3.1.1</version>
         </dependency>
-
-        <!-- Testing -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.0-RC1</version>
-            <scope>test</scope>
-        </dependency>
-
-
     </dependencies>
 
     <build>

@@ -26,9 +26,11 @@ public class RedisManager {
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
     private boolean disabledDebug = false;
+    public RedisEventManager redisEventManager;
 
     public RedisManager(RedisMain main) {
         this.main = main;
+        redisEventManager = new RedisEventManager(main);
         debug("Creating RedisManager with listenID: " + main.getRedisID());
 
         connectJedis();
