@@ -6,6 +6,9 @@ import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import dev.lightdream.redismanager.utils.Utils;
 import lombok.SneakyThrows;
 
+/**
+ * @param <T> The type of the response
+ */
 public class RedisEvent<T> {
 
     public int id = -1;
