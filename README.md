@@ -1,7 +1,7 @@
 # RedisManager
 
 ![Build](../../actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/Version-1.5.1-red.svg)
+![Version](https://img.shields.io/badge/Version-1.5.2-red.svg)
 
 A lib that allows the creation of redis events to facilitate inter server communication.
 
@@ -26,7 +26,7 @@ A lib that allows the creation of redis events to facilitate inter server commun
     <dependency>
         <groupId>dev.lightdream</groupId>
         <artifactId>RedisManager</artifactId>
-        <version>1.5.1</version>
+        <version>1.5.2</version>
     </dependency>
     <!-- Other dependencies -->
 </dependencies>
@@ -42,7 +42,7 @@ repositories {
 }
 
 dependencies {
-    implementation "dev.lightdream:RedisManager:1.5.1"
+    implementation "dev.lightdream:RedisManager:1.5.2"
 
     // Other dependencies
 }
