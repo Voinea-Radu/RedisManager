@@ -6,7 +6,7 @@
 
     <groupId>dev.lightdream</groupId>
     <artifactId>RedisManager</artifactId>
-    <version>1.5.2</version>
+    <version>1.6.0</version>
 
     <distributionManagement>
         <repository>
@@ -81,8 +81,17 @@
         <dependency>
             <groupId>dev.lightdream</groupId>
             <artifactId>Lambda</artifactId>
-            <version>3.1.1</version>
+            <version>3.2.0</version>
         </dependency>
+
+        <!-- Reflection -->
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>
