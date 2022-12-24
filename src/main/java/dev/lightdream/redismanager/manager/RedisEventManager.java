@@ -1,6 +1,7 @@
 package dev.lightdream.redismanager.manager;
 
 import dev.lightdream.logger.Debugger;
+import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
 import lombok.SneakyThrows;
@@ -15,8 +16,8 @@ public class RedisEventManager {
 
     public List<EventMapper> eventMappers = new ArrayList<>();
 
-    public RedisEventManager() {
-        new Reflections("my.package").getMethodsAnnotatedWith(RedisEventHandler.class).forEach(this::register);
+    public RedisEventManager(RedisMain main) {
+        new Reflections(main.getPackage()).getMethodsAnnotatedWith(RedisEventHandler.class).forEach(this::register);
     }
 
     @SneakyThrows
