@@ -3,7 +3,7 @@ package dev.lightdream.redismanager.event;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
-import dev.lightdream.redismanager.utils.Utils;
+import dev.lightdream.redismanager.utils.JsonUtils;
 import lombok.SneakyThrows;
 
 /**
@@ -46,7 +46,7 @@ public class RedisEvent<T> {
 
     @Override
     public String toString() {
-        return Utils.toJson(this);
+        return JsonUtils.toJson(this);
     }
 
     @SuppressWarnings("unused")

@@ -1,7 +1,7 @@
 package dev.lightdream.redismanager.dto;
 
 import com.google.gson.annotations.Expose;
-import dev.lightdream.redismanager.utils.Utils;
+import dev.lightdream.redismanager.utils.JsonUtils;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -15,7 +15,6 @@ public class RedisResponse<T> {
     private String responseClassName;
     private boolean finished = false;
     private boolean timeout = false;
-
 
     public RedisResponse(int id) {
         this.id = id;
@@ -42,7 +41,7 @@ public class RedisResponse<T> {
 
     public void respondUnsafe(String objectJson, String responseClass) {
         this.responseClassName = responseClass;
-        T object = Utils.fromJson(objectJson, getResponseClassName());
+        T object = JsonUtils.fromJson(objectJson, getResponseClassName());
         respond(object, responseClass);
     }
 
@@ -66,18 +65,6 @@ public class RedisResponse<T> {
 
     @Override
     public String toString() {
-        return Utils.toJson(this);
-    }
-
-
-    @SuppressWarnings("unused")
-    public String toStringUnsafe() {
-        return "RedisResponse{" +
-                "id=" + id +
-                ", response=" + response +
-                ", responseClass='" + responseClassName + '\'' +
-                ", finished=" + finished +
-                ", timeout=" + timeout +
-                '}';
+        return JsonUtils.toJson(this);
     }
 }

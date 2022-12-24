@@ -3,7 +3,7 @@ package dev.lightdream.redismanager.manager;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
-import dev.lightdream.redismanager.annotation.RedisListener;
+import dev.lightdream.redismanager.interfaces.RedisListener;
 import dev.lightdream.redismanager.event.RedisEvent;
 import lombok.SneakyThrows;
 import org.reflections.Reflections;
@@ -25,6 +25,7 @@ public class RedisEventManager {
         }
     }
 
+    @SuppressWarnings("unused")
     public void register(Object object) {
         for (Method method : object.getClass().getMethods()) {
             if (method.isAnnotationPresent(RedisEventHandler.class)) {
@@ -71,10 +72,6 @@ public class RedisEventManager {
     public static class EventMapper {
         private final Object object;
         private final List<EventMethod> eventMethods = new ArrayList<>();
-
-        public EventMapper(Object object) {
-            this.object = object;
-        }
 
         @SneakyThrows
         public EventMapper(Class<?> clazz) {

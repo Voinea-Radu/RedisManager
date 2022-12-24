@@ -1,26 +1,21 @@
-# RedisManager
+# Logger
 
-![Build](../../actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/Version-${{ env.VERSION }}-red.svg)
-
-A lib that allows the creation of redis events to facilitate inter server communication.
+[![Build](../../actions/workflows/build.yml/badge.svg)](../../actions)
+[![Version](https://img.shields.io/badge/Version-${{ env.VERSION }}-red.svg)](https://gitlab.com/lightdream-dev/api/-/packages)
 
 ## Use
 
-### Maven
+<details>
+  <summary>Maven</summary>
 
 ```xml
-
 <repositories>
     <repository>
-        <id>lightdream-repo</id>
+        <id>lightdream</id>
         <url>https://repo.lightdream.dev/</url>
     </repository>
     <!-- Other repositories -->
 </repositories>
-```
-
-```xml
 
 <dependencies>
     <dependency>
@@ -31,8 +26,10 @@ A lib that allows the creation of redis events to facilitate inter server commun
     <!-- Other dependencies -->
 </dependencies>
 ```
+</details>
 
-### Gradle
+<details>
+  <summary>Gradle</summary>
 
 ```groovy
 repositories {
@@ -47,7 +44,4 @@ dependencies {
     // Other dependencies
 }
 ```
-
-## Example
-
-Can be found in the [source code](/src/main/java/dev/lightdream/${{ env.PACKAGE }}/example)
+</details>

@@ -5,18 +5,30 @@ import dev.lightdream.redismanager.manager.RedisManager;
 
 public interface RedisMain {
 
+    /**
+     * @return The RedisManager instance
+     */
     RedisManager getRedisManager();
 
+    /**
+     * @return The RedisConfig instance
+     */
     RedisConfig getRedisConfig();
 
-    String getRedisID();
-
+    /**
+     * Time for event to be responded to in milliseconds
+     * @return Time in milliseconds
+     */
     default int getTimeout() {
-        return 2 * 1000;       // 2 seconds    (2000 milliseconds);
+        return 2 * 1000;
     }
 
+    /**
+     * Time between checks if a particular event has been responded to
+     * @return Time in milliseconds
+     */
     default int getWaitBeforeIteration() {
-        return 50;             // 0.05 seconds (50 milliseconds);
+        return 50;
     }
 
     String getPackageName();
