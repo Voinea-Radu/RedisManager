@@ -5,6 +5,7 @@ import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.manager.RedisEventManager;
 import dev.lightdream.redismanager.manager.RedisManager;
 import lombok.SneakyThrows;
+import org.reflections.Reflections;
 
 @SuppressWarnings("unused")
 public class Example implements RedisMain {
@@ -33,13 +34,7 @@ public class Example implements RedisMain {
     }
 
     @Override
-    public String getPackage() {
-        return "com.company.project";
-    }
-
-    @SneakyThrows
-    @Override
-    public Class<?> getClass(String s) {
-        return Class.forName(s);
+    public String getPackageName() {
+        return "com.company";
     }
 }

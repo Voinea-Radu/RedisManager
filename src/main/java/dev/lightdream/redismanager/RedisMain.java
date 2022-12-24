@@ -1,11 +1,9 @@
 package dev.lightdream.redismanager;
 
-import dev.lightdream.lambda.reflection.ReflectionMain;
 import dev.lightdream.redismanager.dto.RedisConfig;
-import dev.lightdream.redismanager.manager.RedisEventManager;
 import dev.lightdream.redismanager.manager.RedisManager;
 
-public interface RedisMain extends ReflectionMain {
+public interface RedisMain {
 
     RedisManager getRedisManager();
 
@@ -21,6 +19,6 @@ public interface RedisMain extends ReflectionMain {
         return 50;             // 0.05 seconds (50 milliseconds);
     }
 
-    String getPackage();
+    String getPackageName();
 
 }
