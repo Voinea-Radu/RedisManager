@@ -1,17 +1,15 @@
 package dev.lightdream.redismanager.manager;
 
-import dev.lightdream.lambda.reflection.ReflectionUtils;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
+import dev.lightdream.redismanager.annotation.RedisListener;
 import dev.lightdream.redismanager.event.RedisEvent;
 import lombok.SneakyThrows;
 import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @SuppressWarnings("rawtypes")
@@ -21,7 +19,26 @@ public class RedisEventManager {
 
     @SneakyThrows
     public RedisEventManager(RedisMain main) {
-        ReflectionUtils.getMethodsAnnotatedWith(main.getPackageName(), RedisEventHandler.class).forEach(this::register);
+        for (Class<? extends RedisListener> clazz : new Reflections(main.getPackageName()).getSubTypesOf(RedisListener.class)) {
+            Debugger.log("Registering methods of " + clazz);
+            register(clazz);
+        }
+    }
+
+    public void register(Object object) {
+        for (Method method : object.getClass().getMethods()) {
+            if (method.isAnnotationPresent(RedisEventHandler.class)) {
+                register(method);
+            }
+        }
+    }
+
+    public void register(Class<?> clazz) {
+        for (Method method : clazz.getMethods()) {
+            if (method.isAnnotationPresent(RedisEventHandler.class)) {
+                register(method);
+            }
+        }
     }
 
     @SneakyThrows
@@ -71,7 +88,8 @@ public class RedisEventManager {
 
             Class<?> eventClassUnchecked = method.getParameters()[0].getType();
 
-            if (RedisEvent.class.isAssignableFrom(eventClassUnchecked)) {
+            if (eventClassUnchecked.isAssignableFrom(RedisEvent.class)) {
+                Debugger.log("NO 1");
                 return;
             }
 
@@ -114,6 +132,7 @@ public class RedisEventManager {
 
         public void fire(Object object, RedisEvent event) {
             sort();
+            Debugger.log("Methods: " + methods);
             for (Method method : methods) {
                 try {
                     method.invoke(object, event);
