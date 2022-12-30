@@ -1,7 +1,7 @@
 # Logger
 
 [![Build](../../actions/workflows/build.yml/badge.svg)](../../actions)
-[![Version](https://img.shields.io/badge/Version-1.9.1-red.svg)](https://gitlab.com/lightdream-dev/api/-/packages)
+[![Version](https://img.shields.io/badge/Version-1.10.2-red.svg)](https://gitlab.com/lightdream-dev/api/-/packages)
 
 ## Use
 
@@ -21,7 +21,7 @@
     <dependency>
         <groupId>dev.lightdream</groupId>
         <artifactId>RedisManager</artifactId>
-        <version>1.9.1</version>
+        <version>1.10.2</version>
     </dependency>
     <!-- Other dependencies -->
 </dependencies>
@@ -39,7 +39,7 @@ repositories {
 }
 
 dependencies {
-    implementation "dev.lightdream:RedisManager:1.9.1"
+    implementation "dev.lightdream:RedisManager:1.10.2"
 
     // Other dependencies
 }
