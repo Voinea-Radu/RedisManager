@@ -20,7 +20,6 @@ public class RedisEventManager {
     @SneakyThrows
     public RedisEventManager(RedisMain main) {
         for (Class<? extends RedisListener> clazz : new Reflections(main.getPackageName()).getSubTypesOf(RedisListener.class)) {
-            Debugger.log("Registering methods of " + clazz);
             register(clazz);
         }
     }
@@ -44,7 +43,6 @@ public class RedisEventManager {
 
     @SneakyThrows
     public void register(Method method) {
-        Debugger.log("Registering method: " + method.getName());
         EventMapper mapper = null;
 
         for (EventMapper eventMapper : eventMappers) {
@@ -86,7 +84,6 @@ public class RedisEventManager {
             Class<?> eventClassUnchecked = method.getParameters()[0].getType();
 
             if (eventClassUnchecked.isAssignableFrom(RedisEvent.class)) {
-                Debugger.log("NO 1");
                 return;
             }
 
@@ -129,7 +126,6 @@ public class RedisEventManager {
 
         public void fire(Object object, RedisEvent event) {
             sort();
-            Debugger.log("Methods: " + methods);
             for (Method method : methods) {
                 try {
                     method.invoke(object, event);
