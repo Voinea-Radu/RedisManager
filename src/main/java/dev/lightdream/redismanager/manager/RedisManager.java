@@ -38,6 +38,7 @@ public class RedisManager {
     }
 
     @SuppressWarnings("unused")
+    @Deprecated
     public void register(Object listener) {
         redisEventManager.register(listener);
     }

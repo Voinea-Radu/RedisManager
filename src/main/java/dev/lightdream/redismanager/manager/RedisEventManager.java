@@ -1,21 +1,20 @@
 package dev.lightdream.redismanager.manager;
 
-import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
 import dev.lightdream.reflections.Reflections;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("rawtypes")
 public class RedisEventManager {
 
-    private final List<EventMapper> eventMappers = new ArrayList<>();
+    public List<EventObject> eventObjects = new ArrayList<>();
 
     public RedisEventManager(RedisMain redisMain) {
         new Reflections(redisMain.getMapper())
@@ -23,166 +22,121 @@ public class RedisEventManager {
                 .forEach(this::register);
     }
 
-    @SuppressWarnings("unused")
+    private void register(Method method) {
+        if (!method.isAnnotationPresent(RedisEventHandler.class)) {
+            Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
+                    " is not annotated with RedisEventHandler");
+            return;
+        }
+
+        EventObject eventObject = getEventClass(method.getDeclaringClass());
+        eventObject.register(method);
+    }
+
+    @Deprecated
     public void register(Object object) {
-        getEventMapper(object).register();
+        for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
+            register(declaredMethod);
+        }
     }
 
-    public void register(Method method) {
-        getEventMapper(method.getDeclaringClass()).register(method);
-    }
-
-    public EventMapper getEventMapper(Object object) {
-        for (EventMapper eventMapper : eventMappers) {
-            if (eventMapper.object == object) {
-                return eventMapper;
+    /**
+     * @param clazz The class of the object that has the methods
+     * @return EventObject
+     */
+    @SneakyThrows
+    private EventObject getEventClass(Class<?> clazz) {
+        for (EventObject eventObject : eventObjects) {
+            if (eventObject.parentObject.getClass().equals(clazz)) {
+                return eventObject;
             }
         }
-
-        EventMapper eventMapper = new EventMapper(object);
-        eventMappers.add(eventMapper);
-        return eventMapper;
-    }
-
-    public EventMapper getEventMapper(Class<?> clazz) {
-        for (EventMapper eventMapper : eventMappers) {
-            if (eventMapper.clazz == clazz) {
-                return eventMapper;
-            }
-        }
-
-        EventMapper eventMapper = new EventMapper(clazz);
-        eventMappers.add(eventMapper);
-        return eventMapper;
+        EventObject eventObject = new EventObject(clazz.newInstance());
+        eventObjects.add(eventObject);
+        return eventObject;
     }
 
     public void fire(RedisEvent event) {
-        for (EventMapper eventMapper : eventMappers) {
-            eventMapper.fire(event);
+        for (EventObject eventObject : eventObjects) {
+            eventObject.fire(event);
         }
     }
 
-    public static class EventMapper {
+    public static class EventObject {
+        public Object parentObject;
+        public List<EventClass> eventClasses = new ArrayList<>();
 
-        private final Class<? extends RedisEvent> clazz;
-        private final Object object;
-        private final List<EventMethod> eventMethods;
-
-        public EventMapper(Object object) {
-            //noinspection unchecked
-            this.clazz = (Class<? extends RedisEvent>) object.getClass();
-            this.object = object;
-            this.eventMethods = new ArrayList<>();
+        private EventObject(Object parentObject) {
+            this.parentObject = parentObject;
         }
 
-        public void register(Method method) {
-            if (!method.isAnnotationPresent(RedisEventHandler.class)) {
-                Logger.warn("Method " + method.getName() + " is not annotated with RedisEventHandler");
+        private void register(Method method) {
+            Class<?>[] params = method.getParameterTypes();
+
+            if (params.length != 1) {
+                Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
+                        " has more than one parameter");
                 return;
             }
 
-            Parameter[] parameters = method.getParameters();
+            Class<?> paramClass = params[0];
 
-            if (parameters.length == 0) {
-                Logger.error("Method " + method.getName() + " in class "
-                        + method.getDeclaringClass().getName() + " has no parameters!");
+            if (!RedisEvent.class.isAssignableFrom(paramClass)) {
+                Logger.warn("Parameter from method " + method.getName() + " from class " + method.getDeclaringClass() +
+                        " is not an instance of RedisEvent");
                 return;
             }
-
-            Class<?> clazz = parameters[0].getType();
-
-            if (!RedisEvent.class.isAssignableFrom(clazz)) {
-                Logger.error("Method " + method.getName() + " in class "
-                        + method.getDeclaringClass().getName() + " has the parameter not of type RedisEvent!");
-                return;
-            }
-
-            Debugger.log("Registered method " + method.getName() + " in class "
-                    + method.getDeclaringClass().getName() + " for event " + clazz.getName());
 
             //noinspection unchecked
-            Class<? extends RedisEvent> eventClass = (Class<? extends RedisEvent>) parameters[0].getType();
+            Class<? extends RedisEvent> clazz = (Class<? extends RedisEvent>) paramClass;
 
-            EventMethod eventMethod = getEventMethod(eventClass);
-            eventMethod.addMethod(method);
+            EventClass eventClass = getEventClass(clazz);
+            eventClass.register(method);
         }
 
-        public void register() {
-            for (Method method : object.getClass().getMethods()) {
-                if (method.isAnnotationPresent(RedisEventHandler.class)) {
-                    if (method.getParameters().length == 0) {
-                        return;
-                    }
-
-                    Class<?> eventClassUnchecked = method.getParameters()[0].getType();
-                    Class<? extends RedisEvent> eventClass;
-
-                    try {
-                        //noinspection unchecked
-                        eventClass = (Class<? extends RedisEvent>) eventClassUnchecked;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return;
-                    }
-
-                    getEventMethod(eventClass).addMethod(method);
+        private EventClass getEventClass(Class<? extends RedisEvent> clazz) {
+            for (EventClass eventClass : eventClasses) {
+                if (eventClass.eventClass.equals(clazz)) {
+                    return eventClass;
                 }
             }
+            EventClass eventClass = new EventClass(clazz);
+            eventClasses.add(eventClass);
+            return eventClass;
         }
 
-        public EventMethod getEventMethod(Class<? extends RedisEvent> clazz) {
-            for (EventMethod eventMethod : eventMethods) {
-                if (eventMethod.clazz.equals(clazz)) {
-                    return eventMethod;
-                }
+        private void fire(RedisEvent event) {
+            for (EventClass eventClass : eventClasses) {
+                eventClass.fire(event, parentObject);
             }
-
-            EventMethod method = new EventMethod(clazz);
-            eventMethods.add(method);
-            return method;
-        }
-
-        public void fire(RedisEvent event) {
-            getEventMethod(event.getClass()).fire(object, event);
         }
     }
 
-    public static class EventMethod {
+    public static class EventClass {
+        public Class<? extends RedisEvent> eventClass;
+        public List<Method> methods = new ArrayList<>();
 
-        private final Class<? extends RedisEvent> clazz;
-        private final List<Method> methods;
-
-        public EventMethod(Class<? extends RedisEvent> clazz) {
-            this.clazz = clazz;
-            this.methods = new ArrayList<>();
+        private EventClass(Class<? extends RedisEvent> eventClass) {
+            this.eventClass = eventClass;
         }
 
-        private void addMethod(Method method) {
+        private void register(Method method) {
+            if (methods.contains(method)) {
+                return;
+            }
             methods.add(method);
         }
 
-        public void fire(Object object, RedisEvent event) {
-            sort();
-            for (Method method : methods) {
-                if (!method.getDeclaringClass().equals(object.getClass())) {
-                    continue;
-                }
-                try {
-                    method.invoke(object, event);
-                } catch (Exception e) {
-                    e.printStackTrace();
+        private void fire(RedisEvent event, Object parentObject) {
+            if (eventClass.isAssignableFrom(event.getClass())) {
+                for (Method method : methods) {
+                    try {
+                        method.invoke(parentObject, event);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
-
-        public void sort() {
-            methods.sort((o1, o2) -> {
-                int i1 = -o1.getAnnotation(RedisEventHandler.class).priority();
-                int i2 = -o2.getAnnotation(RedisEventHandler.class).priority();
-                return i1 - i2;
-            });
-        }
     }
-
-
 }
