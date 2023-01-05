@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.lightdream"
-version = "1.10.4"
+version = "1.10.5"
 
 repositories {
     mavenCentral()
@@ -15,10 +15,9 @@ repositories {
 }
 
 dependencies {
-
     // LightDream
-    implementation("dev.lightdream:Logger:+")
-    implementation("dev.lightdream:Lambda:+")
+    implementation("dev.lightdream:logger:+")
+    implementation("dev.lightdream:lambda:+")
     implementation("dev.lightdream:reflections:+")
 
     // Lombok

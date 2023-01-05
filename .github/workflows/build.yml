@@ -26,6 +26,7 @@ jobs:
           echo "VERSION=$(gradle properties -q | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
           echo "ARTIFACT=$(gradle properties -q | grep "name:" | awk '{print $2}')" >> $GITHUB_ENV
           echo "GROUP=$(gradle properties -q | grep "group:" | awk '{print $2}')" >> $GITHUB_ENV
+          echo "REPOSITORY_NAME=$(echo ${{ github.repository }} | awk -F'/' '{print $2}')" >> $GITHUB_ENV
 
       - name: Uploading artifacts
         run: |
@@ -52,7 +53,7 @@ jobs:
           prerelease: false
           title: "${{ env.VERSION }}"
           files: |
-            build/libs/*.jar
+            target/*.jar
 
       - name: "README.md Render"
         uses: varunsridharan/action-dynamic-readme@main
@@ -68,3 +69,5 @@ jobs:
           ARTIFACT: ${{ env.ARTIFACT }}
           GROUP: ${{ env.GROUP }}
           GITHUB_USERNAME: ${{ github.REPOSITORY_OWNER }}
+          REPOSITORY: ${{ github.REPOSITORY }}
+          REPOSITORY_NAME: ${{ env.REPOSITORY_NAME }}

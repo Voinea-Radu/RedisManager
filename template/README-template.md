@@ -1,4 +1,6 @@
-![Build](../../actions/workflows/build.yml/badge.svg)
+# ${{ env.REPOSITORY_NAME }}
+
+![Build](https://github.com/${{ env.REPOSITORY }}/actions/workflows/build.yml/badge.svg)
 ![Version](https://img.shields.io/badge/Version-${{ env.VERSION }}-red.svg)
 
 ## Use
@@ -130,6 +132,7 @@ dependencies {
   </blockquote></details>
 
 </blockquote></details>
+
 
 
 
