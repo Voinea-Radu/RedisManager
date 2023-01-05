@@ -2,6 +2,8 @@ package dev.lightdream.redismanager;
 
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.manager.RedisManager;
+import dev.lightdream.reflections.Mapper;
+import org.jetbrains.annotations.NotNull;
 
 public interface RedisMain {
 
@@ -31,6 +33,9 @@ public interface RedisMain {
         return 50;
     }
 
-    String getPackageName();
+    /**
+     * @return The Mapper instance
+     */
+    @NotNull Mapper getMapper();
 
 }

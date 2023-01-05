@@ -30,13 +30,14 @@ public class RedisManager {
 
     public RedisManager(RedisMain main) {
         this.main = main;
-        redisEventManager = new RedisEventManager();
+        redisEventManager = new RedisEventManager(main);
         debug("Creating RedisManager with listenID: " + main.getRedisConfig().redisID);
 
         connectJedis();
         subscribe();
     }
 
+    @SuppressWarnings("unused")
     public void register(Object listener) {
         redisEventManager.register(listener);
     }

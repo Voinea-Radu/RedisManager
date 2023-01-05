@@ -6,22 +6,32 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up JDK 8
+      - name: Setup codebase
+        uses: actions/checkout@v2
+
+      - name: Setup Java
         uses: actions/setup-java@v2
         with:
-          java-version: '8'
-          distribution: 'adopt'
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Execute Gradle build
+        run: gradle build
 
       - name: Set version env variable
-        run: echo "VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
-      - name: Set artifact env variable
-        run: echo "ARTIFACT=$(mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)" >> $GITHUB_ENV
-      - name: Set package env variable
-        run: echo "PACKAGE=$(ls src/main/java/*/*)" >> $GITHUB_ENV
+        run: |
+          echo "VERSION=$(gradle properties -q | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
+          echo "ARTIFACT=$(gradle properties -q | grep "name:" | awk '{print $2}')" >> $GITHUB_ENV
 
-      - name: Build with Maven
-        run: mvn package
+      - name: Uploading artifacts
+        run: |
+          touch ~/.m2/settings.xml
+          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <settings xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd\" xmlns=\"http://maven.apache.org/SETTINGS/1.2.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"> <servers> <server> <id>github</id> <username>L1ghtDream</username> <password>${{ secrets.GITHUB_TOKEN }}</password> </server> </servers> </settings>" > ~/.m2/settings.xml
+          mvn deploy:deploy-file -DgroupId=dev.lightdream -DartifactId=${{ env.ARTIFACT }} -Dversion=${{ env.VERSION }} -Dpackaging=jar -Dfile=build/libs/${{ env.ARTIFACT }}.jar -DrepositoryId=github -Durl=https://maven.pkg.github.com/${{ github.repository }}
+
       - name: Automatic Releases
         uses: marvinpinto/action-automatic-releases@latest
         with:
@@ -43,5 +53,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ env.VERSION }}
-          PACKAGE: ${{ env.PACKAGE }}
           ARTIFACT: ${{ env.ARTIFACT }}
