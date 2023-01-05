@@ -52,7 +52,7 @@ jobs:
           prerelease: false
           title: "${{ env.VERSION }}"
           files: |
-            target/*.jar
+            build/libs/*.jar
 
       - name: "README.md Render"
         uses: varunsridharan/action-dynamic-readme@main
