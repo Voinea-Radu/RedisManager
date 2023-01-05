@@ -40,6 +40,10 @@ configurations.all {
     resolutionStrategy.cacheDynamicVersionsFor(10, "seconds")
 }
 
+tasks.withType<Jar> {
+    archiveFileName.set("${rootProject.name}.jar")
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
