@@ -25,12 +25,24 @@ jobs:
         run: |
           echo "VERSION=$(gradle properties -q | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
           echo "ARTIFACT=$(gradle properties -q | grep "name:" | awk '{print $2}')" >> $GITHUB_ENV
+          echo "GROUP=$(gradle properties -q | grep "group:" | awk '{print $2}')" >> $GITHUB_ENV
 
       - name: Uploading artifacts
         run: |
-          touch ~/.m2/settings.xml
-          echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <settings xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd\" xmlns=\"http://maven.apache.org/SETTINGS/1.2.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"> <servers> <server> <id>github</id> <username>L1ghtDream</username> <password>${{ secrets.GITHUB_TOKEN }}</password> </server> </servers> </settings>" > ~/.m2/settings.xml
-          mvn deploy:deploy-file -DgroupId=dev.lightdream -DartifactId=${{ env.ARTIFACT }} -Dversion=${{ env.VERSION }} -Dpackaging=jar -Dfile=build/libs/${{ env.ARTIFACT }}.jar -DrepositoryId=github -Durl=https://maven.pkg.github.com/${{ github.repository }}
+          export github_packages=$(curl \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/users/${{ github.REPOSITORY_OWNER }}/packages/maven/${{ env.GROUP }}.${{ env.ARTIFACT }}/versions )
+          
+          echo $github_packages
+          echo "\"name\": \"${{ env.VERSION }}\""
+          
+          if [[ "$github_packages" != *"\"name\": \"${{ env.VERSION }}\""* ]]; then 
+            touch ~/.m2/settings.xml
+            echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <settings xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd\" xmlns=\"http://maven.apache.org/SETTINGS/1.2.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"> <servers> <server> <id>github</id> <username>L1ghtDream</username> <password>${{ secrets.GITHUB_TOKEN }}</password> </server> </servers> </settings>" > ~/.m2/settings.xml
+            mvn deploy:deploy-file -DgroupId=${{ env.GROUP }} -DartifactId=${{ env.ARTIFACT }} -Dversion=${{ env.VERSION }} -Dpackaging=jar  -Dfile=build/libs/${{ env.ARTIFACT }}.jar  -DrepositoryId=github  -Durl=https://maven.pkg.github.com/${{ github.REPOSITORY }}
+          fi
 
       - name: Automatic Releases
         uses: marvinpinto/action-automatic-releases@latest
@@ -49,8 +61,10 @@ jobs:
           committer_email: "contact@voienaradu.com"
           commit_message: "Updated README.md versions"
           files: |
-            README-template.md=README.md
+            template/README-template.md=README.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ env.VERSION }}
           ARTIFACT: ${{ env.ARTIFACT }}
+          GROUP: ${{ env.GROUP }}
+          GITHUB_USERNAME: ${{ github.REPOSITORY_OWNER }}
