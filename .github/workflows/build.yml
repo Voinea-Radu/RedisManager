@@ -30,21 +30,19 @@ jobs:
 
       - name: Uploading artifacts
         run: |
-          export github_packages=$(curl \
-            -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            https://api.github.com/users/${{ github.REPOSITORY_OWNER }}/packages/maven/${{ env.GROUP }}.${{ env.ARTIFACT }}/versions )
+          touch ~/.gradle/gradle.properties
+          echo "
+            gitlab.url = https://gitlab.com/api/v4/projects/41661215/packages/maven/
+            gitlab.auth.header.name = Private-Token
+            gitlab.auth.header.value = ${{ secrets.GITLAB_AUTH_HEADER_VALUE }}
           
-          echo $github_packages
-          echo "\"name\": \"${{ env.VERSION }}\""
+            github.url = https://maven.pkg.github.com/${{ github.REPOSITORY }}
+            github.auth.username = L1ghtDream
+            github.auth.password = ${{ secrets.GITHUB_TOKEN }}
+          " > ~/.gradle/gradle.properties
           
-          if [[ "$github_packages" != *"\"name\": \"${{ env.VERSION }}\""* ]]; then 
-            touch ~/.m2/settings.xml
-            echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <settings xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd\" xmlns=\"http://maven.apache.org/SETTINGS/1.2.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"> <servers> <server> <id>github</id> <username>L1ghtDream</username> <password>${{ secrets.GITHUB_TOKEN }}</password> </server> </servers> </settings>" > ~/.m2/settings.xml
-            mvn deploy:deploy-file -DgroupId=${{ env.GROUP }} -DartifactId=${{ env.ARTIFACT }} -Dversion=${{ env.VERSION }} -Dpackaging=jar  -Dfile=build/libs/${{ env.ARTIFACT }}.jar  -DrepositoryId=github  -Durl=https://maven.pkg.github.com/${{ github.REPOSITORY }}
-          fi
-
+          gradle publishGitHub || echo "Failed to publish to GitHub"
+          gradle publishGitLab || echo "Failed to publish to GitLab"
       - name: Automatic Releases
         uses: marvinpinto/action-automatic-releases@latest
         with:

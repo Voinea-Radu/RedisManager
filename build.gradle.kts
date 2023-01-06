@@ -55,21 +55,16 @@ publishing {
         }
     }
     repositories {
-        var gitlabURL = project.findProperty("gitlab.url")
-        var gitlabHeaderName = project.findProperty("gitlab.auth.header.name")
-        var gitlabHeaderValue = project.findProperty("gitlab.auth.header.value")
+        val gitlabURL = project.findProperty("gitlab.url") ?: ""
+        val gitlabHeaderName = project.findProperty("gitlab.auth.header.name") ?: ""
+        val gitlabHeaderValue = project.findProperty("gitlab.auth.header.value") ?: ""
 
-        if (gitlabURL == null) {
-            gitlabURL = ""
-        }
-        if (gitlabHeaderName == null) {
-            gitlabHeaderName = ""
-        }
-        if (gitlabHeaderValue == null) {
-            gitlabHeaderValue = ""
-        }
+        val githubURL = project.findProperty("github.url") ?: ""
+        val githubUsername = project.findProperty("github.auth.username") ?: ""
+        val githubPassword = project.findProperty("github.auth.password") ?: ""
 
         maven(url = gitlabURL as String) {
+            name = "gitlab"
             credentials(HttpHeaderCredentials::class) {
                 name = gitlabHeaderName as String
                 value = gitlabHeaderValue as String
@@ -78,5 +73,23 @@ publishing {
                 create<HttpHeaderAuthentication>("header")
             }
         }
+
+        maven(url = githubURL as String) {
+            name = "github"
+            credentials(PasswordCredentials::class) {
+                username = githubUsername as String
+                password = githubPassword as String
+            }
+        }
     }
+}
+
+tasks.register("publishGitLab") {
+    dependsOn("publishMavenPublicationToGitlabRepository")
+    description = "Publishes to GitLab"
+}
+
+tasks.register("publishGitHub") {
+    dependsOn("publishMavenPublicationToGithubRepository")
+    description = "Publishes to GitHub"
 }
