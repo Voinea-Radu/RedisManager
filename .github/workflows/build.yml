@@ -2,6 +2,8 @@ name: Build
 
 on: [ push ]
 
+permissions: read-all
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,6 +19,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.5.1
 
       - name: Execute Gradle build
         run: gradle build

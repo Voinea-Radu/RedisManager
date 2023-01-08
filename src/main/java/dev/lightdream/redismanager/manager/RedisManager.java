@@ -90,6 +90,12 @@ public class RedisManager {
 
                 Class<? extends RedisEvent<?>> clazz = JsonUtils.fromJson(command, RedisEvent.class).getClassByName();
 
+                if (clazz == null) {
+                    Logger.error("An error occurred while creating the class instance of the RedisEvent. " +
+                            "Please refer to the error above if there is any.");
+                    return;
+                }
+
                 if (clazz.equals(ResponseEvent.class)) {
                     ResponseEvent responseEvent = JsonUtils.fromJson(command, ResponseEvent.class);
                     if (!responseEvent.redisTarget.equals(main.getRedisConfig().redisID)) {

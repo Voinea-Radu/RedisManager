@@ -1,10 +1,13 @@
 package dev.lightdream.redismanager.event;
 
+import dev.lightdream.logger.Debugger;
+import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import dev.lightdream.redismanager.utils.JsonUtils;
 import lombok.SneakyThrows;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * @param <T> The type of the response
@@ -20,18 +23,31 @@ public class RedisEvent<T> {
      * @param redisTarget the redis target that will listen for this event. You can use * for all.
      */
     public RedisEvent(String redisTarget) {
-        this.className = getClass().getName();
+        this();
         this.redisTarget = redisTarget;
     }
 
     public RedisEvent() {
-        this.className = getClass().getName();
+        this.className = getClassName();
     }
 
     @SuppressWarnings("unchecked")
-    @SneakyThrows
-    public Class<? extends RedisEvent<T>> getClassByName() {
-        return (Class<? extends RedisEvent<T>>) Class.forName(className);
+    public @Nullable Class<? extends RedisEvent<T>> getClassByName() {
+        try {
+            return (Class<? extends RedisEvent<T>>) Class.forName(className);
+        } catch (Throwable e) {
+            Logger.error("Class " + className + " was not found in the current JVM context. Please make sure" +
+                    "the exact class exists in the project. If you want to have different classes in the sender and " +
+                    "receiver override RedisEvent#getClassName and specify the class name there.");
+            if(Debugger.isEnabled()){
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    public String getClassName(){
+        return getClass().getName();
     }
 
     /**
