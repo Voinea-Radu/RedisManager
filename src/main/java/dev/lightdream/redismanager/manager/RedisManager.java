@@ -14,6 +14,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
+import java.lang.reflect.Method;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -41,6 +42,10 @@ public class RedisManager {
     @Deprecated
     public void register(Object listener) {
         redisEventManager.register(listener);
+    }
+
+    public void register(Method method) {
+        redisEventManager.register(method);
     }
 
     private void connectJedis() {

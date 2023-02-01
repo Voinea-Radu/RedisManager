@@ -22,7 +22,7 @@ public class RedisEventManager {
                 .forEach(this::register);
     }
 
-    private void register(Method method) {
+    public void register(Method method) {
         if (!method.isAnnotationPresent(RedisEventHandler.class)) {
             Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
                     " is not annotated with RedisEventHandler");
@@ -36,6 +36,12 @@ public class RedisEventManager {
     @Deprecated
     public void register(Object object) {
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
+            if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
+                Logger.error("Method " + declaredMethod.getName() + " from class " + declaredMethod.getDeclaringClass() +
+                        " is not annotated with RedisEventHandler");
+                return;
+            }
+
             register(declaredMethod);
         }
     }
