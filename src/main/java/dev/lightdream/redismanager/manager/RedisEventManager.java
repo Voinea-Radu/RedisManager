@@ -1,5 +1,6 @@
 package dev.lightdream.redismanager.manager;
 
+import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
@@ -9,12 +10,17 @@ import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public class RedisEventManager {
 
     public List<EventObject> eventObjects = new ArrayList<>();
+    @SuppressWarnings("rawtypes")
+    public HashMap<
+            Class<? extends RedisEvent>,
+            List<ArgLambdaExecutor<? extends RedisEvent>>
+            > eventHandlers = new HashMap<>();
 
     public RedisEventManager(RedisMain redisMain) {
         new Reflections(redisMain.getMapper())
@@ -22,6 +28,14 @@ public class RedisEventManager {
                 .forEach(this::register);
     }
 
+    @SuppressWarnings("rawtypes")
+    public <T extends RedisEvent> void register(Class<T> clazz, ArgLambdaExecutor<T> handler) {
+        List<ArgLambdaExecutor<? extends RedisEvent>> eventHandlers = this.eventHandlers.getOrDefault(clazz, new ArrayList<>());
+        eventHandlers.add(handler);
+        this.eventHandlers.put(clazz, eventHandlers);
+    }
+
+    @Deprecated
     public void register(Method method) {
         if (!method.isAnnotationPresent(RedisEventHandler.class)) {
             Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
@@ -50,6 +64,7 @@ public class RedisEventManager {
      * @param clazz The class of the object that has the methods
      * @return EventObject
      */
+    @SuppressWarnings("deprecation")
     @SneakyThrows
     private EventObject getEventClass(Class<?> clazz) {
         for (EventObject eventObject : eventObjects) {
@@ -62,9 +77,14 @@ public class RedisEventManager {
         return eventObject;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public void fire(RedisEvent event) {
         for (EventObject eventObject : eventObjects) {
             eventObject.fire(event);
+        }
+        for (ArgLambdaExecutor eventHandler :
+                eventHandlers.getOrDefault(event.getClass(), new ArrayList<>())) {
+            eventHandler.execute(event);
         }
     }
 
@@ -93,13 +113,14 @@ public class RedisEventManager {
                 return;
             }
 
-            //noinspection unchecked
+            //noinspection unchecked,rawtypes
             Class<? extends RedisEvent> clazz = (Class<? extends RedisEvent>) paramClass;
 
             EventClass eventClass = getEventClass(clazz);
             eventClass.register(method);
         }
 
+        @SuppressWarnings("rawtypes")
         private EventClass getEventClass(Class<? extends RedisEvent> clazz) {
             for (EventClass eventClass : eventClasses) {
                 if (eventClass.eventClass.equals(clazz)) {
@@ -111,6 +132,7 @@ public class RedisEventManager {
             return eventClass;
         }
 
+        @SuppressWarnings("rawtypes")
         private void fire(RedisEvent event) {
             for (EventClass eventClass : eventClasses) {
                 eventClass.fire(event, parentObject);
@@ -119,9 +141,11 @@ public class RedisEventManager {
     }
 
     public static class EventClass {
+        @SuppressWarnings("rawtypes")
         public Class<? extends RedisEvent> eventClass;
         public List<Method> methods = new ArrayList<>();
 
+        @SuppressWarnings("rawtypes")
         private EventClass(Class<? extends RedisEvent> eventClass) {
             this.eventClass = eventClass;
         }
@@ -133,6 +157,7 @@ public class RedisEventManager {
             methods.add(method);
         }
 
+        @SuppressWarnings("rawtypes")
         private void fire(RedisEvent event, Object parentObject) {
             if (eventClass.isAssignableFrom(event.getClass())) {
                 for (Method method : methods) {

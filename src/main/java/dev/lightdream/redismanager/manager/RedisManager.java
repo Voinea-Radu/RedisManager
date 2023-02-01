@@ -1,5 +1,6 @@
 package dev.lightdream.redismanager.manager;
 
+import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
@@ -44,9 +45,16 @@ public class RedisManager {
         redisEventManager.register(listener);
     }
 
+    @Deprecated
     public void register(Method method) {
         redisEventManager.register(method);
     }
+
+    @SuppressWarnings("rawtypes")
+    public <E extends RedisEvent> void register(Class<E> clazz, ArgLambdaExecutor<E> method) {
+        redisEventManager.register(clazz, method);
+    }
+
 
     private void connectJedis() {
         if (jedisPool != null) {
