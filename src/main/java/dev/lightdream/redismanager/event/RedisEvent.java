@@ -91,6 +91,18 @@ public class RedisEvent<T> {
         });
     }
 
+    public void sendAndExecuteIfSuccessful(RedisMain main, ArgLambdaExecutor<T> executor) {
+        ScheduleUtils.runTaskAsync((LambdaExecutor) () -> {
+            RedisResponse<T> response = this.sendAndWait(main);
+
+            if(response.hasTimeout()){
+                return;
+            }
+
+            executor.execute(response.getResponse());
+        });
+    }
+
     @SuppressWarnings({"unused", "UnusedReturnValue"})
     @SneakyThrows
     public RedisResponse<T> sendAndWait(RedisMain main) {
