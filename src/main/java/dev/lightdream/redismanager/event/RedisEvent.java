@@ -1,5 +1,8 @@
 package dev.lightdream.redismanager.event;
 
+import dev.lightdream.lambda.ScheduleUtils;
+import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
+import dev.lightdream.lambda.lambda.LambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
@@ -79,6 +82,13 @@ public class RedisEvent<T> {
     @SuppressWarnings("UnusedReturnValue")
     public RedisResponse<T> send(RedisMain main) {
         return main.getRedisManager().send(this);
+    }
+
+    public void sendAndExecute(RedisMain main, ArgLambdaExecutor<RedisResponse<T>> executor) {
+        ScheduleUtils.runTaskAsync((LambdaExecutor) ()->{
+            RedisResponse<T> response = sendAndWait(main);
+            executor.execute(response);
+        });
     }
 
     @SuppressWarnings({"unused", "UnusedReturnValue"})
