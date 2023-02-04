@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.lightdream"
-version = "1.14.2"
+version = "1.15.0"
 
 repositories {
     mavenCentral()
@@ -24,8 +24,6 @@ dependencies {
     implementation("org.projectlombok:lombok:1.18.24")
     annotationProcessor("org.projectlombok:lombok:1.18.24")
 
-    // Google
-    implementation("com.google.code.gson:gson:2.10+")
 
     // Jedis
     implementation("redis.clients:jedis:4.4.0-m1")

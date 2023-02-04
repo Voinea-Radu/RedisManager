@@ -25,7 +25,7 @@ public class RedisEventManager {
     public RedisEventManager(RedisMain redisMain) {
         new Reflections(redisMain.getMapper())
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
-                .forEach(this::register);
+                .forEach(method -> register(method, true));
     }
 
     @SuppressWarnings("rawtypes")
@@ -35,11 +35,15 @@ public class RedisEventManager {
         this.eventHandlers.put(clazz, eventHandlers);
     }
 
-    @Deprecated
-    public void register(Method method) {
+    private void register(Method method, boolean fromConstructor) {
         if (!method.isAnnotationPresent(RedisEventHandler.class)) {
             Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
                     " is not annotated with RedisEventHandler");
+            return;
+        }
+
+        RedisEventHandler redisEventHandler = method.getAnnotation(RedisEventHandler.class);
+        if (!redisEventHandler.autoRegister() && fromConstructor) {
             return;
         }
 
@@ -47,7 +51,6 @@ public class RedisEventManager {
         eventObject.register(method);
     }
 
-    @Deprecated
     public void register(Object object) {
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
@@ -56,7 +59,7 @@ public class RedisEventManager {
                 return;
             }
 
-            register(declaredMethod);
+            register(declaredMethod, false);
         }
     }
 
@@ -160,6 +163,11 @@ public class RedisEventManager {
         @SuppressWarnings("rawtypes")
         private void fire(RedisEvent event, Object parentObject) {
             if (eventClass.isAssignableFrom(event.getClass())) {
+                methods.sort((o1, o2) -> {
+                    RedisEventHandler annotation1 = o1.getAnnotation(RedisEventHandler.class);
+                    RedisEventHandler annotation2 = o2.getAnnotation(RedisEventHandler.class);
+                    return annotation1.priority() - annotation2.priority();
+                });
                 for (Method method : methods) {
                     try {
                         method.invoke(parentObject, event);

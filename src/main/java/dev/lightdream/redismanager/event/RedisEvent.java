@@ -8,7 +8,7 @@ import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
-import dev.lightdream.redismanager.utils.JsonUtils;
+import dev.lightdream.redismanager.manager.RedisManager;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,14 +42,14 @@ public class RedisEvent<T> {
             Logger.error("Class " + className + " was not found in the current JVM context. Please make sure" +
                     "the exact class exists in the project. If you want to have different classes in the sender and " +
                     "receiver override RedisEvent#getClassName and specify the class name there.");
-            if(Debugger.isEnabled()){
+            if (Debugger.isEnabled()) {
                 e.printStackTrace();
             }
             return null;
         }
     }
 
-    public String getClassName(){
+    public String getClassName() {
         return getClass().getName();
     }
 
@@ -65,7 +65,7 @@ public class RedisEvent<T> {
 
     @Override
     public String toString() {
-        return JsonUtils.toJson(this);
+        return RedisManager.toJson(this);
     }
 
     @SuppressWarnings("unused")
@@ -84,18 +84,20 @@ public class RedisEvent<T> {
         return main.getRedisManager().send(this);
     }
 
+    @SuppressWarnings("unused")
     public void sendAndExecute(RedisMain main, ArgLambdaExecutor<RedisResponse<T>> executor) {
-        ScheduleUtils.runTaskAsync((LambdaExecutor) ()->{
+        ScheduleUtils.runTaskAsync((LambdaExecutor) () -> {
             RedisResponse<T> response = sendAndWait(main);
             executor.execute(response);
         });
     }
 
+    @SuppressWarnings("unused")
     public void sendAndExecuteIfSuccessful(RedisMain main, ArgLambdaExecutor<T> executor) {
         ScheduleUtils.runTaskAsync((LambdaExecutor) () -> {
             RedisResponse<T> response = this.sendAndWait(main);
 
-            if(response.hasTimeout()){
+            if (response.hasTimeout()) {
                 return;
             }
 

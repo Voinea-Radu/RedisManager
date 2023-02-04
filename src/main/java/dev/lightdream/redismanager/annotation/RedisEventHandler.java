@@ -8,4 +8,7 @@ public @interface RedisEventHandler {
 
     int priority() default 0;
 
+    boolean autoRegister() default false;
+
+
 }

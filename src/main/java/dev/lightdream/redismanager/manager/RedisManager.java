@@ -1,5 +1,7 @@
 package dev.lightdream.redismanager.manager;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
@@ -7,7 +9,8 @@ import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.RedisEvent;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
-import dev.lightdream.redismanager.utils.JsonUtils;
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -15,12 +18,13 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
-import java.lang.reflect.Method;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisManager {
-
+    @Getter
+    @Setter
+    private static Gson gson = new GsonBuilder().disableHtmlEscaping().create();
     private final Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
     private final RedisMain main;
     public JedisPool jedisPool;
@@ -39,22 +43,23 @@ public class RedisManager {
         subscribe();
     }
 
+    public static String toJson(Object object) {
+        return getGson().toJson(object);
+    }
+
+    public static <T> T fromJson(String json, Class<T> type) {
+        return getGson().fromJson(json, type);
+    }
+
     @SuppressWarnings("unused")
-    @Deprecated
     public void register(Object listener) {
         redisEventManager.register(listener);
     }
 
-    @Deprecated
-    public void register(Method method) {
-        redisEventManager.register(method);
-    }
-
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes", "unused"})
     public <E extends RedisEvent> void register(Class<E> clazz, ArgLambdaExecutor<E> method) {
         redisEventManager.register(clazz, method);
     }
-
 
     private void connectJedis() {
         if (jedisPool != null) {
@@ -101,7 +106,7 @@ public class RedisManager {
                     return;
                 }
 
-                Class<? extends RedisEvent<?>> clazz = JsonUtils.fromJson(command, RedisEvent.class).getClassByName();
+                Class<? extends RedisEvent<?>> clazz = fromJson(command, RedisEvent.class).getClassByName();
 
                 if (clazz == null) {
                     Logger.error("An error occurred while creating the class instance of the RedisEvent. " +
@@ -110,7 +115,7 @@ public class RedisManager {
                 }
 
                 if (clazz.equals(ResponseEvent.class)) {
-                    ResponseEvent responseEvent = JsonUtils.fromJson(command, ResponseEvent.class);
+                    ResponseEvent responseEvent = fromJson(command, ResponseEvent.class);
                     if (!responseEvent.redisTarget.equals(main.getRedisConfig().redisID)) {
                         debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                         return;
@@ -127,7 +132,7 @@ public class RedisManager {
                 }
 
                 new Thread(() -> {
-                    RedisEvent<?> redisEvent = JsonUtils.fromJson(command, clazz);
+                    RedisEvent<?> redisEvent = fromJson(command, clazz);
                     if (!redisEvent.redisTarget.equals(main.getRedisConfig().redisID)) {
                         debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                         return;
@@ -217,6 +222,5 @@ public class RedisManager {
     public Queue<RedisResponse<?>> getAwaitingResponses() {
         return awaitingResponses;
     }
-
 
 }
