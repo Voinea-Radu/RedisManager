@@ -1,7 +1,7 @@
 # RedisManager
 
 ![Build](https://github.com/L1ghtDream/RedisManager/actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/Version-1.14.2-red.svg)
+![Version](https://img.shields.io/badge/Version-1.15.0-red.svg)
 
 ## Use
 
@@ -25,7 +25,7 @@ If you want to use an older version that is not avanible in https://repo.lightdr
     <dependency>
         <groupId>dev.lightdream</groupId>
         <artifactId>redis-manager</artifactId>
-        <version>1.14.2</version>
+        <version>1.15.0</version>
     </dependency>
 </dependenies>
 ```
@@ -48,7 +48,7 @@ If you want to use an older version that is not avanible in https://repo.lightdr
     <dependency>
         <groupId>com.github.L1ghtDream</groupId>
         <artifactId>redis-manager</artifactId>
-        <version>1.14.2</version>
+        <version>1.15.0</version>
     </dependency>
 </dependencies>
 ```
@@ -71,7 +71,7 @@ repositories {
 
 ```groovy
 dependencies {
-    implementation "dev.lightdream:redis-manager:1.14.2"
+    implementation "dev.lightdream:redis-manager:1.15.0"
 }
 ```
   </details>
@@ -86,7 +86,7 @@ repositories {
 
 ```groovy
 dependencies {
-    implementation "com.github.L1ghtDream:redis-manager:1.14.2"
+    implementation "com.github.L1ghtDream:redis-manager:1.15.0"
 }
 ```
   </details>
@@ -98,15 +98,15 @@ dependencies {
   <details>
 <summary>repo.lightdream.dev</summary>
 
-```groovy
+```kotlin
 repositories {
-    maven { url "https://repo.lightdream.dev/" }
+    maven("https://repo.lightdream.dev/")
 }
 ```
 
-```groovy
+```kotlin
 dependencies {
-    implementation("dev.lightdream:redis-manager:1.14.2")
+    implementation("dev.lightdream:redis-manager:1.15.0")
 }
 ```
   </details>
@@ -121,7 +121,7 @@ repositories {
 
 ```kotlin
 dependencies {
-    implementation("com.github.L1ghtDream:redis-manager:1.14.2")
+    implementation("com.github.L1ghtDream:redis-manager:1.15.0")
 }
 ```
 
