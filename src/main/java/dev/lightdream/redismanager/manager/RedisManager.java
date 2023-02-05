@@ -99,9 +99,17 @@ public class RedisManager {
     private void subscribe() {
         subscriberJedisPubSub = new JedisPubSub() {
 
-            @SuppressWarnings("unchecked")
-            @Override
             public void onMessage(String channel, final String command) {
+                try{
+                    onMessageReceive(channel, command);
+                }catch (Throwable t){
+                    t.printStackTrace();
+                    Logger.error("There was an error while receiving a message from Redis.");
+                }
+            }
+
+            @SuppressWarnings("unchecked")
+            public void onMessageReceive(String channel, final String command){
                 if (command.trim().length() == 0) {
                     return;
                 }
