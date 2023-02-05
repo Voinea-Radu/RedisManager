@@ -52,6 +52,12 @@ public class RedisEventManager {
     }
 
     public void register(Object object) {
+
+        if (getEventObject(object.getClass()) == null) {
+            EventObject eventObject = new EventObject(object);
+            eventObjects.add(eventObject);
+        }
+
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
                 Logger.error("Method " + declaredMethod.getName() + " from class " + declaredMethod.getDeclaringClass() +
@@ -70,14 +76,23 @@ public class RedisEventManager {
     @SuppressWarnings("deprecation")
     @SneakyThrows
     private EventObject getEventClass(Class<?> clazz) {
+        EventObject eventObject = getEventObject(clazz);
+        if (eventObject != null) {
+            return eventObject;
+        }
+
+        eventObject = new EventObject(clazz.newInstance());
+        eventObjects.add(eventObject);
+        return eventObject;
+    }
+
+    private EventObject getEventObject(Class<?> clazz) {
         for (EventObject eventObject : eventObjects) {
             if (eventObject.parentObject.getClass().equals(clazz)) {
                 return eventObject;
             }
         }
-        EventObject eventObject = new EventObject(clazz.newInstance());
-        eventObjects.add(eventObject);
-        return eventObject;
+        return null;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
