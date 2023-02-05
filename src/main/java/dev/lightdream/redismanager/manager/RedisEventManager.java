@@ -52,7 +52,6 @@ public class RedisEventManager {
     }
 
     public void register(Object object) {
-
         if (getEventObject(object.getClass()) == null) {
             EventObject eventObject = new EventObject(object);
             eventObjects.add(eventObject);
@@ -60,9 +59,9 @@ public class RedisEventManager {
 
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
-                Logger.error("Method " + declaredMethod.getName() + " from class " + declaredMethod.getDeclaringClass() +
-                        " is not annotated with RedisEventHandler");
-                return;
+                //Logger.error("Method " + declaredMethod.getName() + " from class " + declaredMethod.getDeclaringClass() +
+                //        " is not annotated with RedisEventHandler");
+                continue;
             }
 
             register(declaredMethod, false);
