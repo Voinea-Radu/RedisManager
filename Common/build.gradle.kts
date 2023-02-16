@@ -80,3 +80,8 @@ tasks.register("publishSelf") {
     dependsOn("publishMavenPublicationToSelfRepository")
     description = "Publishes to Self hosted repository"
 }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}

@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-extra["project"] = "2.0.0"
+extra["project"] = "2.0.1"
 
 group = "dev.lightdream"
 version = getVersion("project")
