@@ -12,7 +12,7 @@ public abstract class RedisPlatform {
 
     private final CommonRedisManager redisManager;
 
-    public RedisPlatform(CommonRedisManager redisManager){
+    protected RedisPlatform(CommonRedisManager redisManager){
         this.redisManager=redisManager;
         connect();
     }
@@ -29,7 +29,7 @@ public abstract class RedisPlatform {
         }
     }
 
-    public void onMessageReceive(String channel, final String command){
+    protected void onMessageReceive(String channel, final String command){
         redisManager.onMessageReceive(channel, command);
     }
 
@@ -39,10 +39,10 @@ public abstract class RedisPlatform {
 
     // Platform methods
 
-    public abstract void send(String channel, String message);
+    protected abstract void send(String channel, String message);
 
-    public abstract void connect();
+    protected abstract void connect();
 
-    public abstract void disconnect();
+    protected abstract void disconnect();
 
 }
