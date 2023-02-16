@@ -121,7 +121,7 @@ public abstract class CommonRedisManager {
 
         if (clazz.equals(ResponseEvent.class)) {
             ResponseEvent responseEvent = fromJson(command, ResponseEvent.class);
-            if (!responseEvent.redisTarget.equals(main.getRedisConfig().redisID)) {
+            if (!checkRedisTarget(responseEvent.redisTarget)) {
                 debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                 return;
             }
@@ -138,13 +138,17 @@ public abstract class CommonRedisManager {
 
         new Thread(() -> {
             RedisEvent<?> redisEvent = fromJson(command, clazz);
-            if (!redisEvent.redisTarget.equals(main.getRedisConfig().redisID)) {
+            if (checkRedisTarget(redisEvent.redisTarget)) {
                 debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                 return;
             }
             debug("[Receive            ] [" + channel + "] " + command);
             redisEvent.fireEvent(main);
         }).start();
+    }
+
+    private boolean checkRedisTarget(String redisTarget) {
+        return main.getRedisConfig().redisID.matches(redisTarget);
     }
 
 
