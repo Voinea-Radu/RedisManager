@@ -1,10 +1,10 @@
-package dev.lightdream.redismanager.manager;
+package dev.lightdream.redismanager.common.manager;
 
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.RedisMain;
-import dev.lightdream.redismanager.annotation.RedisEventHandler;
-import dev.lightdream.redismanager.event.RedisEvent;
+import dev.lightdream.redismanager.common.RedisMain;
+import dev.lightdream.redismanager.common.annotation.RedisEventHandler;
+import dev.lightdream.redismanager.common.event.RedisEvent;
 import dev.lightdream.reflections.Reflections;
 import lombok.SneakyThrows;
 

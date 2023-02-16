@@ -1,14 +1,14 @@
-package dev.lightdream.redismanager.event;
+package dev.lightdream.redismanager.common.event;
 
 import dev.lightdream.lambda.ScheduleUtils;
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.lambda.lambda.LambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.RedisMain;
-import dev.lightdream.redismanager.dto.RedisResponse;
-import dev.lightdream.redismanager.event.impl.ResponseEvent;
-import dev.lightdream.redismanager.manager.RedisManager;
+import dev.lightdream.redismanager.common.RedisMain;
+import dev.lightdream.redismanager.common.dto.RedisResponse;
+import dev.lightdream.redismanager.common.event.impl.ResponseEvent;
+import dev.lightdream.redismanager.common.manager.CommonRedisManager;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,7 +65,7 @@ public class RedisEvent<T> {
 
     @Override
     public String toString() {
-        return RedisManager.toJson(this);
+        return CommonRedisManager.toJson(this);
     }
 
     @SuppressWarnings("unused")

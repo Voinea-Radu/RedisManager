@@ -1,7 +1,7 @@
-package dev.lightdream.redismanager;
+package dev.lightdream.redismanager.common;
 
-import dev.lightdream.redismanager.dto.RedisConfig;
-import dev.lightdream.redismanager.manager.RedisManager;
+import dev.lightdream.redismanager.common.dto.RedisConfig;
+import dev.lightdream.redismanager.common.manager.CommonRedisManager;
 import dev.lightdream.reflections.Mapper;
 import org.jetbrains.annotations.NotNull;
 
@@ -10,7 +10,7 @@ public interface RedisMain {
     /**
      * @return The RedisManager instance
      */
-    RedisManager getRedisManager();
+    CommonRedisManager getRedisManager();
 
     /**
      * @return The RedisConfig instance

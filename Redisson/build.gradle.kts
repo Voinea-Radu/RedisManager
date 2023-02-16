@@ -3,19 +3,42 @@ plugins {
     id("maven-publish")
 }
 
-extra["project"] = "2.0.0"
-
 group = "dev.lightdream"
 version = getVersion("project")
 
 repositories {
-
+    mavenCentral()
+    maven("https://repo.lightdream.dev/")
+    maven("https://mvnrepository.com/artifact/redis.clients/jedis")
+    maven("https://mvnrepository.com/artifact/org.jetbrains/annotations")
+    maven("https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api")
 }
 
 dependencies {
+    // Project
+    implementation(project(":redis-manager.common"))
+
+    // LightDream
+    implementation("dev.lightdream:logger:3.1.0")
+    implementation("dev.lightdream:lambda:3.8.1")
+    implementation("dev.lightdream:reflections:1.2.2")
+    implementation("dev.lightdream:message-builder:3.1.2")
+
+    // Lombok
+    implementation("org.projectlombok:lombok:1.18.24")
+    annotationProcessor("org.projectlombok:lombok:1.18.24")
+
+    // Redisson
+    implementation("org.redisson:redisson:3.17.0")
+
+    // JetBrains
+    implementation("org.jetbrains:annotations:23.1.0")
 
 }
 
+fun getVersion(id: String): String {
+    return rootProject.extra[id] as String
+}
 
 publishing {
     publications {
@@ -58,8 +81,4 @@ tasks.register("publishGitHub") {
 tasks.register("publishSelf") {
     dependsOn("publishMavenPublicationToSelfRepository")
     description = "Publishes to Self hosted repository"
-}
-
-fun getVersion(id: String): String {
-    return rootProject.extra[id] as String
 }

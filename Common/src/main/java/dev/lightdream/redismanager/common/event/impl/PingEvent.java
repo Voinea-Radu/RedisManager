@@ -1,6 +1,6 @@
-package dev.lightdream.redismanager.event.impl;
+package dev.lightdream.redismanager.common.event.impl;
 
-import dev.lightdream.redismanager.event.RedisEvent;
+import dev.lightdream.redismanager.common.event.RedisEvent;
 import lombok.NoArgsConstructor;
 
 @SuppressWarnings("unused")

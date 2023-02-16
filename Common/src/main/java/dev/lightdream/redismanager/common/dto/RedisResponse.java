@@ -1,7 +1,7 @@
-package dev.lightdream.redismanager.dto;
+package dev.lightdream.redismanager.common.dto;
 
 import com.google.gson.annotations.Expose;
-import dev.lightdream.redismanager.manager.RedisManager;
+import dev.lightdream.redismanager.common.manager.CommonRedisManager;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -41,7 +41,7 @@ public class RedisResponse<T> {
 
     public void respondUnsafe(String objectJson, String responseClass) {
         this.responseClassName = responseClass;
-        T object = RedisManager.fromJson(objectJson, getResponseClassName());
+        T object = CommonRedisManager.fromJson(objectJson, getResponseClassName());
         respond(object, responseClass);
     }
 
@@ -65,6 +65,6 @@ public class RedisResponse<T> {
 
     @Override
     public String toString() {
-        return RedisManager.toJson(this);
+        return CommonRedisManager.toJson(this);
     }
 }

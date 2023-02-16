@@ -1,4 +1,4 @@
-package dev.lightdream.redismanager.annotation;
+package dev.lightdream.redismanager.common.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

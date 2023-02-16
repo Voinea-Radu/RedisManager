@@ -1,4 +1,4 @@
-package dev.lightdream.redismanager.dto;
+package dev.lightdream.redismanager.common.dto;
 
 public class RedisConfig {
 

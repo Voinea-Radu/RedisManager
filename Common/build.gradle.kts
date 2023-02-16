@@ -3,20 +3,41 @@ plugins {
     id("maven-publish")
 }
 
-extra["project"] = "2.0.0"
-
 group = "dev.lightdream"
 version = getVersion("project")
 
 repositories {
-
+    mavenCentral()
+    maven("https://repo.lightdream.dev/")
+    maven("https://mvnrepository.com/artifact/org.jetbrains/annotations")
+    maven("https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api")
 }
 
 dependencies {
+    // LightDream
+    implementation("dev.lightdream:logger:3.1.0")
+    implementation("dev.lightdream:lambda:3.8.1")
+    implementation("dev.lightdream:reflections:1.2.2")
+
+    // Lombok
+    implementation("org.projectlombok:lombok:1.18.24")
+    annotationProcessor("org.projectlombok:lombok:1.18.24")
+
+    // Gson
+    implementation("com.google.code.gson:gson:2.8.8")
+
+    // JetBrains
+    implementation("org.jetbrains:annotations:23.1.0")
 
 }
 
+tasks.getByName<Test>("test") {
+    useJUnitPlatform()
+}
 
+fun getVersion(id: String): String {
+    return rootProject.extra[id] as String
+}
 publishing {
     publications {
         create<MavenPublication>("maven") {
@@ -58,8 +79,4 @@ tasks.register("publishGitHub") {
 tasks.register("publishSelf") {
     dependsOn("publishMavenPublicationToSelfRepository")
     description = "Publishes to Self hosted repository"
-}
-
-fun getVersion(id: String): String {
-    return rootProject.extra[id] as String
 }
