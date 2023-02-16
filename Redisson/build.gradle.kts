@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     // Project
-    implementation(project(":redis-manager.common"))
+    implementation(project(":redis-manager-common"))
 
     // LightDream
     implementation("dev.lightdream:logger:3.1.0")
