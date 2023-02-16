@@ -151,5 +151,8 @@ public abstract class CommonRedisManager {
         return main.getRedisConfig().redisID.matches(redisTarget);
     }
 
+    private void disconnect(){
+        redisPlatform.disconnect();
+    }
 
 }

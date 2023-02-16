@@ -1,7 +1,6 @@
 package dev.lightdream.redismanager.jedis;
 
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.common.RedisMain;
 import dev.lightdream.redismanager.common.manager.RedisPlatform;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -98,6 +97,21 @@ public class JedisPlatform extends RedisPlatform {
         };
 
         startRedisThread();
+    }
+
+    @Override
+    public void disconnect() {
+        if (jedisPool != null) {
+            jedisPool.destroy();
+        }
+
+        if (jedisPubSub != null) {
+            jedisPubSub.unsubscribe();
+        }
+
+        if (redisTread != null) {
+            redisTread.interrupt();
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import org.redisson.config.Config;
 public class RedissonPlatform extends RedisPlatform {
 
     private RTopic topic;
+    private RedissonClient client;
 
     public RedissonPlatform(CommonRedisManager redisManager) {
         super(redisManager);
@@ -31,9 +32,15 @@ public class RedissonPlatform extends RedisPlatform {
                         .parse()
         ).setPassword(getMain().getRedisConfig().password);
 
-        RedissonClient client = Redisson.create(config);
+        client = Redisson.create(config);
 
         topic = client.getTopic(getMain().getRedisConfig().channel);
         topic.addListener(String.class, (channel, msg) -> onMessageReceive(channel.toString(), msg));
+    }
+
+    @Override
+    public void disconnect() {
+        client.shutdown();
+        topic.removeAllListeners();
     }
 }
