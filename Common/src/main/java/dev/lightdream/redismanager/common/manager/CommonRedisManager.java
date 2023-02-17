@@ -138,7 +138,7 @@ public abstract class CommonRedisManager {
 
         new Thread(() -> {
             RedisEvent<?> redisEvent = fromJson(command, clazz);
-            if (checkRedisTarget(redisEvent.redisTarget)) {
+            if (!checkRedisTarget(redisEvent.redisTarget)) {
                 debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                 return;
             }
