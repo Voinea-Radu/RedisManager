@@ -27,7 +27,7 @@ dependencies {
     implementation("redis.clients:jedis:4.4.0-m1")
 
     // JetBrains
-    implementation("org.jetbrains:annotations:23.1.0")
+    implementation("org.jetbrains:annotations:24.0.1")
 
     // Reflections
     implementation("org.reflections:reflections:0.10.2")
