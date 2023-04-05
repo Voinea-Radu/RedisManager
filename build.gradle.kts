@@ -20,8 +20,8 @@ dependencies {
     implementation("dev.lightdream:lambda:3.8.1")
 
     // Lombok
-    implementation("org.projectlombok:lombok:1.18.24")
-    annotationProcessor("org.projectlombok:lombok:1.18.24")
+    implementation("org.projectlombok:lombok:1.18.26")
+    annotationProcessor("org.projectlombok:lombok:1.18.26")
 
     // Jedis
     implementation("redis.clients:jedis:4.4.0-m2")
