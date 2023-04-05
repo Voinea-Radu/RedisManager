@@ -17,7 +17,7 @@ repositories {
 dependencies {
     // LightDream
     implementation("dev.lightdream:logger:3.2.0")
-    implementation("dev.lightdream:lambda:3.8.1")
+    implementation("dev.lightdream:lambda:4.0.0")
 
     // Lombok
     implementation("org.projectlombok:lombok:1.18.26")
