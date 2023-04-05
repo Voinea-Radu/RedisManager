@@ -24,7 +24,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.24")
 
     // Jedis
-    implementation("redis.clients:jedis:4.4.0-m1")
+    implementation("redis.clients:jedis:4.4.0-m2")
 
     // JetBrains
     implementation("org.jetbrains:annotations:23.1.0")
