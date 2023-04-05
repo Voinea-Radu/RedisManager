@@ -5,7 +5,6 @@ import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
-import dev.lightdream.reflections.Reflections;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
@@ -22,8 +21,8 @@ public class RedisEventManager {
             List<ArgLambdaExecutor<? extends RedisEvent>>
             > eventHandlers = new HashMap<>();
 
-    public RedisEventManager(RedisMain redisMain) {
-        new Reflections(redisMain.getMapper())
+    public RedisEventManager(RedisMain main) {
+        main.getReflections()
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
                 .forEach(method -> register(method, true));
     }
