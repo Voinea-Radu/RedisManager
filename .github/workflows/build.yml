@@ -1,12 +1,19 @@
 # This script requires the following secrets to be set in the repository settings:
-# - GITLAB_AUTH_HEADER_VALUE
-# - PERSONAL_TOKEN
 # - SELF_PASSWORD
 #
 
 name: Build
 
-on: [ push ]
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_run:
+    workflows: [ "Patch Version" ]
+    types:
+      - completed
+
 
 jobs:
   build:
@@ -17,16 +24,33 @@ jobs:
       - name: Setup codebase
         uses: actions/checkout@v3
 
+
+      # ===== VERSION ======
+
+      - name: Increment version
+        run: |
+          wget -O tmp-increment_version.sh https://raw.githubusercontent.com/L1ghtDream/report/cdn/increment_version.sh
+          chmod +x tmp-increment_version.sh
+          ./tmp-increment_version.sh
+
+      - name: Commit version update
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Incremented patch version
+          commit_options: '--no-verify --signoff'
+
+          commit_user_name: Radu Voinea
+          commit_user_email: contact@voinearadu.com
+
+
+      # ===== JAVA ======
+
+
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: temurin
-          java-version: 17
-
-      - name: "Setup Python3"
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+          distribution: zulu
+          java-version: 19
 
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
@@ -41,29 +65,31 @@ jobs:
 
       # ===== EXTERNAL SCRIPTS =====
 
-
       - name: External scripts
+        if: github.event_name != 'pull_request'
         run: |
           wget -O tmp-environment_variables.sh https://raw.githubusercontent.com/L1ghtDream/report/cdn/environment_variables.sh
           chmod +x tmp-environment_variables.sh
           ./tmp-environment_variables.sh ${{ github.REPOSITORY }}
           
-          mkdir -p tmp
-          cd tmp
-          wget https://raw.githubusercontent.com/L1ghtDream/report/cdn/README-template.md
+          wget -O tmp-create_readme_template.sh https://raw.githubusercontent.com/L1ghtDream/report/cdn/create_readme_template.sh
+          chmod +x tmp-create_readme_template.sh
+          ./tmp-create_readme_template.sh
 
 
       # ===== PUBLISH ======
 
 
       - name: Uploading artifacts
+        if: github.event_name != 'pull_request'
         run: |
           wget -O tmp-publish.sh https://raw.githubusercontent.com/L1ghtDream/report/cdn/publish.sh 
           chmod +x tmp-publish.sh 
-          ./tmp-publish.sh ${{ secrets.GITLAB_AUTH_HEADER_VALUE }} ${{ github.REPOSITORY }} ${{ secrets.GITHUB_TOKEN }} ${{ secrets.SELF_PASSWORD }}
+          ./tmp-publish.sh ${{ github.REPOSITORY }} ${{ secrets.GITHUB_TOKEN }} ${{ secrets.SELF_PASSWORD }}
 
       - name: Automatic Releases
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        if: github.event_name != 'pull_request'
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ env.VERSION }}"
@@ -77,7 +103,8 @@ jobs:
 
 
       - name: "README.md Render"
-        uses: varunsridharan/action-dynamic-readme@main
+        uses: varunsridharan/action-dynamic-readme@1.2
+        if: github.event_name != 'pull_request'
         with:
           committer_name: "Radu Voinea"
           committer_email: "contact@voienaradu.com"
@@ -92,9 +119,3 @@ jobs:
           GITHUB_USERNAME: ${{ github.REPOSITORY_OWNER }}
           REPOSITORY: ${{ github.REPOSITORY }}
           REPOSITORY_NAME: ${{ env.REPOSITORY_NAME }}
-
-      - name: "Updating remote report"
-        run: |
-          wget -O tmp-update_report.sh https://raw.githubusercontent.com/L1ghtDream/report/cdn/update_report.sh
-          chmod +x tmp-update_report.sh
-          ./tmp-update_report.sh https://github.com/L1ghtDream/report ${{ env.ARTIFACT }} ${{ env.VERSION }} ${{ secrets.PERSONAL_TOKEN }}

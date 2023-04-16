@@ -20,11 +20,19 @@ public class RedisEventManager {
             Class<? extends RedisEvent>,
             List<ArgLambdaExecutor<? extends RedisEvent>>
             > eventHandlers = new HashMap<>();
+    @SuppressWarnings("FieldCanBeLocal")
+    private final ArgLambdaExecutor<String> debug;
 
-    public RedisEventManager(RedisMain main) {
+    public RedisEventManager(RedisMain main, ArgLambdaExecutor<String> debug) {
+        this.debug=debug;
+        debug.execute("Starting automatic method registration");
         main.getReflections()
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
-                .forEach(method -> register(method, true));
+                .forEach(method -> {
+                    debug.execute("Registering method " + method.getName() + " from class " + method.getDeclaringClass());
+                    register(method, true);
+                });
+        debug.execute("Ended automatic method registration");
     }
 
     @SuppressWarnings("rawtypes")
@@ -58,8 +66,6 @@ public class RedisEventManager {
 
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
-                //Logger.error("Method " + declaredMethod.getName() + " from class " + declaredMethod.getDeclaringClass() +
-                //        " is not annotated with RedisEventHandler");
                 continue;
             }
 

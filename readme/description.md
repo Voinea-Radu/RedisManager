@@ -1,0 +1,1 @@
+Jedis based Redis Manager. This lib allows you to send targeted and broadcast events through Redis as well as offering a wrapper for the base Jedis with a more user-friendly config.
