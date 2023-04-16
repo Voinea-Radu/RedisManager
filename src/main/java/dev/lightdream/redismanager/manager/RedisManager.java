@@ -35,7 +35,13 @@ public class RedisManager {
     private boolean debug = false;
 
     public RedisManager(RedisMain main) {
+        this(main,false);
+    }
+
+    public RedisManager(RedisMain main, boolean debug) {
         this.main = main;
+        enableDebugMessage();
+
         redisEventManager = new RedisEventManager(main, this::debug);
         debug("Creating RedisManager with listenID: " + main.getRedisConfig().redisID);
 
