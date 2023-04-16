@@ -32,15 +32,15 @@ public class RedisManager {
     public RedisEventManager redisEventManager;
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
-    private boolean debug = false;
+    private boolean debug;
 
     public RedisManager(RedisMain main) {
-        this(main,false);
+        this(main, false);
     }
 
     public RedisManager(RedisMain main, boolean debug) {
         this.main = main;
-        enableDebugMessage();
+        this.debug = debug;
 
         redisEventManager = new RedisEventManager(main, this::debug);
         debug("Creating RedisManager with listenID: " + main.getRedisConfig().redisID);
@@ -106,16 +106,16 @@ public class RedisManager {
         subscriberJedisPubSub = new JedisPubSub() {
 
             public void onMessage(String channel, final String command) {
-                try{
+                try {
                     onMessageReceive(channel, command);
-                }catch (Throwable t){
+                } catch (Throwable t) {
                     t.printStackTrace();
                     Logger.error("There was an error while receiving a message from Redis.");
                 }
             }
 
             @SuppressWarnings("unchecked")
-            public void onMessageReceive(String channel, final String command){
+            public void onMessageReceive(String channel, final String command) {
                 if (command.trim().length() == 0) {
                     return;
                 }

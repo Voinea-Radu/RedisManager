@@ -20,19 +20,18 @@ public class RedisEventManager {
             Class<? extends RedisEvent>,
             List<ArgLambdaExecutor<? extends RedisEvent>>
             > eventHandlers = new HashMap<>();
-    @SuppressWarnings("FieldCanBeLocal")
     private final ArgLambdaExecutor<String> debug;
 
     public RedisEventManager(RedisMain main, ArgLambdaExecutor<String> debug) {
-        this.debug=debug;
-        debug.execute("Starting automatic method registration");
+        this.debug = debug;
+        this.debug.execute("Starting automatic method registration");
         main.getReflections()
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
                 .forEach(method -> {
-                    debug.execute("Registering method " + method.getName() + " from class " + method.getDeclaringClass());
+                    this.debug.execute("Registering method " + method.getName() + " from class " + method.getDeclaringClass());
                     register(method, true);
                 });
-        debug.execute("Ended automatic method registration");
+        this.debug.execute("Ended automatic method registration");
     }
 
     @SuppressWarnings("rawtypes")

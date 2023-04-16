@@ -38,6 +38,7 @@ public interface RedisMain {
     /**
      * @return The Mapper instance
      */
-    @NotNull Reflections getReflections();
+    @NotNull
+    Reflections getReflections();
 
 }
