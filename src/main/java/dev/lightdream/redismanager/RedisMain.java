@@ -17,7 +17,7 @@ public interface RedisMain {
     @NotNull Gson getGson();
 
     @SuppressWarnings("unused")
-    default void initializeRedisMain(){
+    default void initializeRedisMain() {
         Statics.setMain(this);
     }
 

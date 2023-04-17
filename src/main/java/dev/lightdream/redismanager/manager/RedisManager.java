@@ -50,9 +50,9 @@ public class RedisManager {
     }
 
     public void checkID() {
-        RedisResponse<Boolean> response= new PingEvent(config.getRedisID()).sendAndWait();
+        RedisResponse<Boolean> response = new PingEvent(config.getRedisID()).sendAndWait();
 
-        if(!response.hasTimeout()){
+        if (!response.hasTimeout()) {
             throw new RuntimeException("The redis ID you are using is already being used by another instance." +
                     "Please regenerate your redisConfig.json");
         }

@@ -24,7 +24,7 @@ public class RedisDebugger {
         enabled = true;
     }
 
-    public boolean isEnabled(){
+    public boolean isEnabled() {
         return enabled;
     }
 
@@ -66,21 +66,21 @@ public class RedisDebugger {
                 .parse());
     }
 
-    public void sendResponse(String channel, String response){
+    public void sendResponse(String channel, String response) {
         print(sendResponse
                 .parse("channel", channel)
                 .parse("response", response)
                 .parse());
     }
 
-    public void send(String channel, String event){
+    public void send(String channel, String event) {
         print(send
                 .parse("channel", channel)
                 .parse("event", event)
                 .parse());
     }
 
-    public void registeringMethod(String method, String clazz){
+    public void registeringMethod(String method, String clazz) {
         print(registeringMethod
                 .parse("method", method)
                 .parse("class", clazz)
