@@ -23,8 +23,9 @@ dependencies {
     // Jedis
     api(libs.jedis)
 
-    // Reflections
+    // Utils
     api(libs.reflections)
+    api(libs.gson)
 
     // Annotations
     compileOnly(libs.lombok)
