@@ -30,7 +30,7 @@ dependencies {
     // Annotations
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
-    compileOnly(libs.jetbrains.annotations)
+    api(libs.jetbrains.annotations)
     annotationProcessor(libs.jetbrains.annotations)
 
 }
