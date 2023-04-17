@@ -40,22 +40,11 @@ public class RedisManager {
         this.config = Statics.getMain().getRedisConfig();
         debugger = new RedisDebugger(debug);
 
-        checkID();
-
         redisEventManager = new RedisEventManager(this);
         debugger.creatingListener(config.getRedisID());
 
         connectJedis();
         subscribe();
-    }
-
-    public void checkID() {
-        RedisResponse<Boolean> response = new PingEvent(config.getRedisID()).sendAndWait();
-
-        if (!response.hasTimeout()) {
-            throw new RuntimeException("The redis ID you are using is already being used by another instance." +
-                    "Please regenerate your redisConfig.json");
-        }
     }
 
     @SuppressWarnings("unused")
