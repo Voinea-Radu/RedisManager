@@ -2,7 +2,7 @@
 # RedisManager
 
 ![Build](../../actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/Version-1.15.9-red.svg)
+![Version](https://img.shields.io/badge/Version-1.15.10-red.svg)
 
 # Table Of Contents
 1. [Description](#description)
@@ -35,12 +35,12 @@ The artifact can be found at the repository https://repo.lightdream.dev or https
     <dependency>
         <groupId>dev.lightdream</groupId>
         <artifactId>redis-manager</artifactId>
-        <version>1.15.9</version>
+        <version>1.15.10</version>
     </dependency>
     <dependency>
         <groupId>com.github.L1ghtDream</groupId>
         <artifactId>redis-manager</artifactId>
-        <version>1.15.9</version>
+        <version>1.15.10</version>
     </dependency>
 </dependencies>
 ```
