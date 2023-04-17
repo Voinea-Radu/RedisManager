@@ -5,10 +5,9 @@ import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.lambda.lambda.LambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.RedisMain;
+import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
-import dev.lightdream.redismanager.manager.RedisManager;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,77 +55,97 @@ public class RedisEvent<T> {
     /**
      * Fires the event (internally)
      * Does NOT send it to the redis target
-     *
-     * @param main RedisMain main instance
      */
-    public void fireEvent(RedisMain main) {
-        main.getRedisManager().redisEventManager.fire(this);
+    public void fireEvent() {
+        Statics.getMain().getRedisManager().redisEventManager.fire(this);
     }
 
     @Override
     public String toString() {
-        return RedisManager.toJson(this);
+        throw new RuntimeException(getClass().getName() + "#toString has been called. Please use #serialzie instead");
+    }
+
+    public String serialize() {
+        return Statics.getMain().getGson().toJson(this);
     }
 
     @SuppressWarnings("unused")
-    public void respond(RedisMain main, T response) {
-        new ResponseEvent(this, response).send(main);
+    public void respond(T response) {
+        new ResponseEvent(this, response).send();
     }
 
     /**
      * Send the event through the redis manager to the target
      *
-     * @param main RedisMain main instance
      * @return response
      */
     @SuppressWarnings("UnusedReturnValue")
-    public RedisResponse<T> send(RedisMain main) {
-        return main.getRedisManager().send(this);
+    public RedisResponse<T> send() {
+        return Statics.getMain().getRedisManager().send(this);
+    }
+
+    public void sendAndExecuteSync(ArgLambdaExecutor<T> success, LambdaExecutor fail) {
+        RedisResponse<T> response = this.sendAndWait();
+
+        if (response.hasTimeout()) {
+            fail.execute();
+            return;
+        }
+
+        success.execute(response.getResponse());
+    }
+
+    public @Nullable T sendAndGet(LambdaExecutor fail) {
+        RedisResponse<T> response = this.sendAndWait();
+
+        if (response.hasTimeout()) {
+            fail.execute();
+            return null;
+        }
+
+        return response.getResponse();
     }
 
     @SuppressWarnings("unused")
-    public void sendAndExecute(RedisMain main, ArgLambdaExecutor<RedisResponse<T>> executor) {
-        ScheduleUtils.runTaskAsync((LambdaExecutor) () -> {
-            RedisResponse<T> response = sendAndWait(main);
-            executor.execute(response);
+    public @Nullable T sendAndGet() {
+        return sendAndGet(() -> {
         });
     }
 
     @SuppressWarnings("unused")
-    public void sendAndExecuteIfSuccessful(RedisMain main, ArgLambdaExecutor<T> executor) {
-        ScheduleUtils.runTaskAsync((LambdaExecutor) () -> {
-            RedisResponse<T> response = this.sendAndWait(main);
-
-            if (response.hasTimeout()) {
-                return;
-            }
-
-            executor.execute(response.getResponse());
+    public void sendAndExecute(ArgLambdaExecutor<T> success) {
+        sendAndExecute(success, () -> {
         });
     }
+
+    public void sendAndExecute(ArgLambdaExecutor<T> success, LambdaExecutor fail) {
+        ScheduleUtils.runTaskAsync(() -> sendAndExecuteSync(success, fail));
+    }
+
 
     @SuppressWarnings({"unused", "UnusedReturnValue"})
     @SneakyThrows
-    public RedisResponse<T> sendAndWait(RedisMain main) {
-        return sendAndWait(main, main.getTimeout());
+    public RedisResponse<T> sendAndWait() {
+        return sendAndWait(Statics.getMain().getRedisConfig().getTimeout());
     }
 
     @SuppressWarnings("BusyWait")
     @SneakyThrows
-    public RedisResponse<T> sendAndWait(RedisMain main, int timeout) {
+    public RedisResponse<T> sendAndWait(int timeout) {
         int currentWait = 0;
-        RedisResponse<T> response = send(main);
+        RedisResponse<T> response = send();
         while (!response.isFinished()) {
-            Thread.sleep(main.getWaitBeforeIteration());
-            currentWait += main.getWaitBeforeIteration();
+            Thread.sleep(Statics.getMain().getRedisConfig().getWaitBeforeIteration());
+            currentWait += Statics.getMain().getRedisConfig().getWaitBeforeIteration();
             if (currentWait > timeout) {
                 response.timeout();
                 break;
             }
         }
 
-        //TODO: Maybe implement logic for trying again, however for now simply remove the response afterwards
-        main.getRedisManager().getAwaitingResponses().remove(response);
+        //TODO Maybe implement logic for trying again, however for now simply remove the response afterwards
+        //TODO This will need to have an option in the config to enable / disable packet resending
+        Statics.getMain().getRedisManager().getAwaitingResponses().remove(response);
 
         return response;
     }

@@ -1,10 +1,10 @@
 plugins {
-    id("java")
+    id("java-library")
     id("maven-publish")
 }
 
 group = "dev.lightdream"
-version = "1.15.10"
+version = "2.0.-1"
 
 repositories {
     mavenCentral()
@@ -16,21 +16,21 @@ repositories {
 
 dependencies {
     // LightDream
-    implementation("dev.lightdream:logger:3.2.4")
-    implementation("dev.lightdream:lambda:4.0.0")
-
-    // Lombok
-    implementation("org.projectlombok:lombok:1.18.26")
-    annotationProcessor("org.projectlombok:lombok:1.18.26")
+    api(libs.lightdream.logger)
+    api(libs.lightdream.lambda)
+    api(libs.lightdream.messagebuilder)
 
     // Jedis
-    implementation("redis.clients:jedis:4.4.0-m2")
-
-    // JetBrains
-    implementation("org.jetbrains:annotations:24.0.1")
+    api(libs.jedis)
 
     // Reflections
-    implementation("org.reflections:reflections:0.10.2")
+    api(libs.reflections)
+
+    // Annotations
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+    compileOnly(libs.jetbrains.annotations)
+    annotationProcessor(libs.jetbrains.annotations)
 
 }
 

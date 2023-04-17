@@ -2,7 +2,7 @@ package dev.lightdream.redismanager.manager;
 
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.RedisMain;
+import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
 import lombok.SneakyThrows;
@@ -14,24 +14,20 @@ import java.util.List;
 
 public class RedisEventManager {
 
-    public List<EventObject> eventObjects = new ArrayList<>();
+    private final List<EventObject> eventObjects = new ArrayList<>();
     @SuppressWarnings("rawtypes")
-    public HashMap<
+    private final HashMap<
             Class<? extends RedisEvent>,
             List<ArgLambdaExecutor<? extends RedisEvent>>
             > eventHandlers = new HashMap<>();
-    private final ArgLambdaExecutor<String> debug;
+    private final RedisManager redisManager;
 
-    public RedisEventManager(RedisMain main, ArgLambdaExecutor<String> debug) {
-        this.debug = debug;
-        this.debug.execute("Starting automatic method registration");
-        main.getReflections()
+
+    public RedisEventManager(RedisManager manager) {
+        this.redisManager = manager;
+        Statics.getMain().getReflections()
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
-                .forEach(method -> {
-                    this.debug.execute("Registering method " + method.getName() + " from class " + method.getDeclaringClass());
-                    register(method, true);
-                });
-        this.debug.execute("Ended automatic method registration");
+                .forEach(method -> register(method, true));
     }
 
     @SuppressWarnings("rawtypes")
@@ -52,6 +48,8 @@ public class RedisEventManager {
         if (!redisEventHandler.autoRegister() && fromConstructor) {
             return;
         }
+
+        redisManager.getDebugger().registeringMethod(method.getName(), method.getDeclaringClass().getName());
 
         EventObject eventObject = getEventClass(method.getDeclaringClass());
         eventObject.register(method);
@@ -98,7 +96,7 @@ public class RedisEventManager {
         return null;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked", "unused"})
     public void fire(RedisEvent event) {
         for (EventObject eventObject : eventObjects) {
             eventObject.fire(event);

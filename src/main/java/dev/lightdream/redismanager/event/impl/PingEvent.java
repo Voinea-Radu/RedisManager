@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @SuppressWarnings("unused")
 @NoArgsConstructor
-public class PingEvent extends RedisEvent<Object> {
+public class PingEvent extends RedisEvent<Boolean> {
 
     public PingEvent(String target) {
         super(target);

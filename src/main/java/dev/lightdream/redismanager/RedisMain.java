@@ -1,5 +1,6 @@
 package dev.lightdream.redismanager;
 
+import com.google.gson.Gson;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.manager.RedisManager;
 import org.jetbrains.annotations.NotNull;
@@ -7,38 +8,17 @@ import org.reflections.Reflections;
 
 public interface RedisMain {
 
-    /**
-     * @return The RedisManager instance
-     */
-    RedisManager getRedisManager();
+    @NotNull RedisManager getRedisManager();
 
-    /**
-     * @return The RedisConfig instance
-     */
-    RedisConfig getRedisConfig();
+    @NotNull RedisConfig getRedisConfig();
 
-    /**
-     * Time for event to be responded to in milliseconds
-     *
-     * @return Time in milliseconds
-     */
-    default int getTimeout() {
-        return 2 * 1000;
+    @NotNull Reflections getReflections();
+
+    @NotNull Gson getGson();
+
+    @SuppressWarnings("unused")
+    default void initializeRedisMain(){
+        Statics.setMain(this);
     }
-
-    /**
-     * Time between checks if a particular event has been responded to
-     *
-     * @return Time in milliseconds
-     */
-    default int getWaitBeforeIteration() {
-        return 50;
-    }
-
-    /**
-     * @return The Mapper instance
-     */
-    @NotNull
-    Reflections getReflections();
 
 }

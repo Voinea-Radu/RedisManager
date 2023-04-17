@@ -1,7 +1,8 @@
 package dev.lightdream.redismanager.dto;
 
 import com.google.gson.annotations.Expose;
-import dev.lightdream.redismanager.manager.RedisManager;
+import dev.lightdream.redismanager.RedisMain;
+import dev.lightdream.redismanager.Statics;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -41,7 +42,7 @@ public class RedisResponse<T> {
 
     public void respondUnsafe(String objectJson, String responseClass) {
         this.responseClassName = responseClass;
-        T object = RedisManager.fromJson(objectJson, getResponseClassName());
+        T object = Statics.getMain().getGson().fromJson(objectJson, getResponseClassName());
         respond(object, responseClass);
     }
 
@@ -65,6 +66,11 @@ public class RedisResponse<T> {
 
     @Override
     public String toString() {
-        return RedisManager.toJson(this);
+        throw new RuntimeException(getClass().getName() + "#toString has been called. Please use #serialzie instead");
+    }
+
+    @SuppressWarnings("unused")
+    public String serialize(RedisMain main) {
+        return main.getGson().toJson(this);
     }
 }
