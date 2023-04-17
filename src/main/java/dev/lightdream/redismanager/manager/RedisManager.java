@@ -6,7 +6,6 @@ import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.RedisEvent;
-import dev.lightdream.redismanager.event.impl.PingEvent;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
