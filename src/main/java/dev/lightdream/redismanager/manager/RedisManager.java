@@ -34,6 +34,7 @@ public class RedisManager {
     private int id = 0;
     private boolean debug;
 
+    @SuppressWarnings("unused")
     public RedisManager(RedisMain main) {
         this(main, false);
     }
@@ -43,7 +44,7 @@ public class RedisManager {
         this.debug = debug;
 
         redisEventManager = new RedisEventManager(main, this::debug);
-        debug("Creating RedisManager with listenID: " + main.getRedisConfig().redisID);
+        debug("Creating RedisManager with listenID: " + main.getRedisConfig().getRedisID());
 
         connectJedis();
         subscribe();
@@ -75,7 +76,12 @@ public class RedisManager {
         JedisPoolConfig config = new JedisPoolConfig();
         config.setMaxTotal(16);
 
-        this.jedisPool = new JedisPool(config, main.getRedisConfig().host, main.getRedisConfig().port, 0, main.getRedisConfig().password);
+        this.jedisPool = new JedisPool(
+                config,
+                main.getRedisConfig().getHost(),
+                main.getRedisConfig().getPort(),
+                0,
+                main.getRedisConfig().getPassword());
     }
 
     @SuppressWarnings("unused")
@@ -130,7 +136,7 @@ public class RedisManager {
 
                 if (clazz.equals(ResponseEvent.class)) {
                     ResponseEvent responseEvent = fromJson(command, ResponseEvent.class);
-                    if (!responseEvent.redisTarget.equals(main.getRedisConfig().redisID)) {
+                    if (!responseEvent.redisTarget.equals(main.getRedisConfig().getRedisID())) {
                         debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                         return;
                     }
@@ -147,7 +153,7 @@ public class RedisManager {
 
                 new Thread(() -> {
                     RedisEvent<?> redisEvent = fromJson(command, clazz);
-                    if (!redisEvent.redisTarget.equals(main.getRedisConfig().redisID)) {
+                    if (!redisEvent.redisTarget.equals(main.getRedisConfig().getRedisID())) {
                         debug("[Receive-Not-Allowed] [" + channel + "] HIDDEN");
                         return;
                     }
@@ -178,7 +184,7 @@ public class RedisManager {
         }
         redisTread = new Thread(() -> {
             try (Jedis subscriberJedis = jedisPool.getResource()) {
-                subscriberJedis.subscribe(subscriberJedisPubSub, main.getRedisConfig().channel);
+                subscriberJedis.subscribe(subscriberJedisPubSub, main.getRedisConfig().getChannel());
             } catch (Exception e) {
                 Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
                 if (debug) {
@@ -202,13 +208,13 @@ public class RedisManager {
     }
 
     public <T> RedisResponse<T> send(RedisEvent<T> command) {
-        command.originator = main.getRedisConfig().redisID;
+        command.originator = main.getRedisConfig().getRedisID();
 
         if (command instanceof ResponseEvent) {
-            debug("[Send-Response      ] [" + main.getRedisConfig().channel + "] " + command);
+            debug("[Send-Response      ] [" + main.getRedisConfig().getChannel() + "] " + command);
 
             try (Jedis jedis = jedisPool.getResource()) {
-                jedis.publish(main.getRedisConfig().channel, command.toString());
+                jedis.publish(main.getRedisConfig().getChannel(), command.toString());
             } catch (Exception e) {
                 if (debug) {
                     e.printStackTrace();
@@ -219,13 +225,13 @@ public class RedisManager {
         }
 
         command.id = ++id;
-        debug("[Send               ] [" + main.getRedisConfig().channel + "] " + command);
+        debug("[Send               ] [" + main.getRedisConfig().getChannel() + "] " + command);
 
         RedisResponse<T> redisResponse = new RedisResponse<>(command.id);
         awaitingResponses.add(redisResponse);
 
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.publish(main.getRedisConfig().channel, command.toString());
+            jedis.publish(main.getRedisConfig().getChannel(), command.toString());
         } catch (JedisConnectionException e) {
             throw new RuntimeException("Unable to publish channel message", e);
         }
