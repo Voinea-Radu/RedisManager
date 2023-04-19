@@ -21,4 +21,8 @@ public interface RedisMain {
         Statics.setMain(this);
     }
 
+    static RedisMain getRedisMain(){
+        return Statics.getMain();
+    }
+
 }

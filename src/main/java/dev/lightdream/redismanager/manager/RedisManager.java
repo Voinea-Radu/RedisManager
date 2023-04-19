@@ -2,6 +2,7 @@ package dev.lightdream.redismanager.manager;
 
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
+import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.dto.RedisResponse;
@@ -20,7 +21,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisManager {
     private final Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
-    private final RedisConfig config;
 
     public JedisPool jedisPool;
     public Thread redisTread = null;
@@ -36,11 +36,10 @@ public class RedisManager {
     }
 
     public RedisManager(boolean debug) {
-        this.config = Statics.getMain().getRedisConfig();
         debugger = new RedisDebugger(debug);
 
         redisEventManager = new RedisEventManager(this);
-        debugger.creatingListener(config.getRedisID());
+        debugger.creatingListener(config().getRedisID());
 
         connectJedis();
         subscribe();
@@ -66,10 +65,10 @@ public class RedisManager {
 
         this.jedisPool = new JedisPool(
                 jedisConfig,
-                config.getHost(),
-                config.getPort(),
+                config().getHost(),
+                config().getPort(),
                 0,
-                config.getPassword());
+                config().getPassword());
     }
 
     @SuppressWarnings("unused")
@@ -119,7 +118,7 @@ public class RedisManager {
 
                 if (clazz.equals(ResponseEvent.class)) {
                     ResponseEvent responseEvent = Statics.getMain().getGson().fromJson(event, ResponseEvent.class);
-                    if (!responseEvent.redisTarget.equals(config.getRedisID())) {
+                    if (!shouldReceive(responseEvent)) {
                         debugger.receiveNotAllowed(channel);
                         return;
                     }
@@ -136,7 +135,7 @@ public class RedisManager {
 
                 new Thread(() -> {
                     RedisEvent<?> redisEvent = Statics.getMain().getGson().fromJson(event, clazz);
-                    if (!redisEvent.redisTarget.equals(config.getRedisID())) {
+                    if (!shouldReceive(redisEvent)) {
                         debugger.receiveNotAllowed(channel);
                         return;
                     }
@@ -167,7 +166,7 @@ public class RedisManager {
         }
         redisTread = new Thread(() -> {
             try (Jedis subscriberJedis = jedisPool.getResource()) {
-                subscriberJedis.subscribe(subscriberJedisPubSub, config.getChannel());
+                subscriberJedis.subscribe(subscriberJedisPubSub, config().getChannel());
             } catch (Exception e) {
                 Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
                 if (debugger.isEnabled()) {
@@ -191,13 +190,13 @@ public class RedisManager {
     }
 
     public <T> RedisResponse<T> send(RedisEvent<T> event) {
-        event.originator = config.getRedisID();
+        event.originator = config().getRedisID();
 
         if (event instanceof ResponseEvent) {
-            debugger.sendResponse(config.getChannel(), event.serialize());
+            debugger.sendResponse(config().getChannel(), event.serialize());
 
             try (Jedis jedis = jedisPool.getResource()) {
-                jedis.publish(config.getChannel(), event.serialize());
+                jedis.publish(config().getChannel(), event.serialize());
             } catch (Exception e) {
                 if (debugger.isEnabled()) {
                     e.printStackTrace();
@@ -208,13 +207,13 @@ public class RedisManager {
         }
 
         event.id = ++id;
-        debugger.send(config.getChannel(), event.serialize());
+        debugger.send(config().getChannel(), event.serialize());
 
         RedisResponse<T> redisResponse = new RedisResponse<>(event.id);
         awaitingResponses.add(redisResponse);
 
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.publish(config.getChannel(), event.serialize());
+            jedis.publish(config().getChannel(), event.serialize());
         } catch (JedisConnectionException e) {
             throw new RuntimeException("Unable to publish channel message", e);
         }
@@ -224,6 +223,16 @@ public class RedisManager {
 
     public Queue<RedisResponse<?>> getAwaitingResponses() {
         return awaitingResponses;
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean shouldReceive(RedisEvent<?> event){
+        return event.redisTarget.equals("*") ||
+                event.redisTarget.equals(config().getRedisID());
+    }
+
+    private RedisConfig config(){
+        return RedisMain.getRedisMain().getRedisConfig();
     }
 
 }
