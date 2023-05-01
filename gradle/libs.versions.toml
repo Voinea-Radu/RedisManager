@@ -1,6 +1,6 @@
 [libraries]
 # Redis
-jedis = { module = "redis.clients:jedis", version = "4.4.0-m2" }
+jedis = { module = "redis.clients:jedis", version = "4.4.0-rc1" }
 
 # Utils
 lombok = { module = "org.projectlombok:lombok", version = "1.18.26" }
