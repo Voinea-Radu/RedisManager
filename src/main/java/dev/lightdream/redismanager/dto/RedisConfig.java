@@ -1,10 +1,12 @@
 package dev.lightdream.redismanager.dto;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
+@Setter
 @SuppressWarnings("FieldMayBeFinal")
 public class RedisConfig {
 
