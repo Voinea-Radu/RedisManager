@@ -82,7 +82,7 @@ public class RedisManager {
     }
 
     @SuppressWarnings("unused")
-    public void setEnableDebugMessage(boolean enable) {
+    public void setEnableDebug(boolean enable) {
         debugger.setEnabled(enable);
     }
 
