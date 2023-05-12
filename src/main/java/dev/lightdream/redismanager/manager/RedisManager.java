@@ -72,8 +72,18 @@ public class RedisManager {
     }
 
     @SuppressWarnings("unused")
-    public void enableDebugMessage() {
+    public void enableDebug() {
         debugger.enable();
+    }
+
+    @SuppressWarnings("unused")
+    public void disableDebug() {
+        debugger.disable();
+    }
+
+    @SuppressWarnings("unused")
+    public void setEnableDebugMessage(boolean enable) {
+        debugger.setEnabled(enable);
     }
 
     @SuppressWarnings("rawtypes")
