@@ -70,6 +70,10 @@ public class RedisEventManager {
         }
     }
 
+    public void unregister(Object object) {
+        eventObjects.removeIf(eventObject -> eventObject.parentObject.equals(object));
+    }
+
     /**
      * @param clazz The class of the object that has the methods
      * @return EventObject

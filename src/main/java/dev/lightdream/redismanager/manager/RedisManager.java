@@ -50,6 +50,11 @@ public class RedisManager {
         redisEventManager.register(listener);
     }
 
+    @SuppressWarnings("unused")
+    public void unregister(Object listener) {
+        redisEventManager.unregister(listener);
+    }
+
     @SuppressWarnings({"rawtypes", "unused"})
     public <E extends RedisEvent> void register(Class<E> clazz, ArgLambdaExecutor<E> method) {
         redisEventManager.register(clazz, method);
