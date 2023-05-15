@@ -21,14 +21,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisManager {
     private final Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
-
+    private final @Getter RedisDebugger debugger;
     public JedisPool jedisPool;
     public Thread redisTread = null;
     public RedisEventManager redisEventManager;
     private JedisPubSub subscriberJedisPubSub;
     private int id = 0;
-
-    private final @Getter RedisDebugger debugger;
 
     @SuppressWarnings("unused")
     public RedisManager() {
@@ -241,12 +239,12 @@ public class RedisManager {
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    public boolean shouldReceive(RedisEvent<?> event){
+    public boolean shouldReceive(RedisEvent<?> event) {
         return event.redisTarget.equals("*") ||
                 event.redisTarget.equals(config().getRedisID());
     }
 
-    private RedisConfig config(){
+    private RedisConfig config() {
         return RedisMain.getRedisMain().getRedisConfig();
     }
 

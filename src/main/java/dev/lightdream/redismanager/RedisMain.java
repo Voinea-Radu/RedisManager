@@ -8,6 +8,10 @@ import org.reflections.Reflections;
 
 public interface RedisMain {
 
+    static RedisMain getRedisMain() {
+        return Statics.getMain();
+    }
+
     @NotNull RedisManager getRedisManager();
 
     @NotNull RedisConfig getRedisConfig();
@@ -19,10 +23,6 @@ public interface RedisMain {
     @SuppressWarnings("unused")
     default void initializeRedisMain() {
         Statics.setMain(this);
-    }
-
-    static RedisMain getRedisMain(){
-        return Statics.getMain();
     }
 
 }

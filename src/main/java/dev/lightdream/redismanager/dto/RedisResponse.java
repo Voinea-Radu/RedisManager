@@ -41,8 +41,16 @@ public class RedisResponse<T> {
     }
 
     public void respondUnsafe(String objectJson, String responseClass) {
+
         this.responseClassName = responseClass;
-        T object = Statics.getMain().getGson().fromJson(objectJson, getResponseClassName());
+        T object;
+
+        if (objectJson.equals("") || responseClass.equals("")) {
+            object = null;
+        } else {
+            object = Statics.getMain().getGson().fromJson(objectJson, getResponseClassName());
+        }
+
         respond(object, responseClass);
     }
 

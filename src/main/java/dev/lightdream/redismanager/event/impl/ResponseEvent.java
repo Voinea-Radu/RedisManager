@@ -13,6 +13,13 @@ public class ResponseEvent extends RedisEvent<Object> {
     public ResponseEvent(RedisEvent<?> command, Object response) {
         super(command.originator);
         this.id = command.id;
+
+        if (response == null) {
+            this.response = "";
+            this.responseClassName = "";
+            return;
+        }
+
         this.response = Statics.getMain().getGson().toJson(response);
         this.responseClassName = response.getClass().getName();
     }
