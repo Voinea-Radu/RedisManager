@@ -196,7 +196,7 @@ public class RedisEventManager {
                 });
                 for (Method method : methods) {
                     try {
-                        method.invoke(parentObject, event);
+                        method.invoke(parentObject, eventClass.cast(event));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
