@@ -182,7 +182,13 @@ public class RedisEventManager {
 
         @SuppressWarnings("rawtypes")
         private void fire(RedisEvent event, Object parentObject) {
-            if (eventClass.isAssignableFrom(event.getClass())) {
+            Class<?> clazz = event.getClassByName();
+            if (clazz == null) {
+                Logger.warn("#getClassByName method failed on object " + event);
+                clazz = event.getClass();
+            }
+
+            if (eventClass.isAssignableFrom(clazz)) {
                 methods.sort((o1, o2) -> {
                     RedisEventHandler annotation1 = o1.getAnnotation(RedisEventHandler.class);
                     RedisEventHandler annotation2 = o2.getAnnotation(RedisEventHandler.class);
