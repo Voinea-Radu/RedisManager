@@ -3,7 +3,6 @@ package dev.lightdream.redismanager.manager;
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
-import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.RedisEvent;
@@ -114,23 +113,21 @@ public class RedisManager {
                 }
             }
 
-            @SuppressWarnings("unchecked")
             public void onMessageReceive(String channel, final String event) {
                 if (event.trim().length() == 0) {
                     return;
                 }
 
+                RedisEvent<?> redisEvent = RedisEvent.deserialize(event);
 
-                Class<? extends RedisEvent<?>> clazz = Statics.getMain().getGson().fromJson(event, RedisEvent.class).getClassByName();
-
-                if (clazz == null) {
+                if (redisEvent == null) {
                     Logger.error("An error occurred while creating the class instance of the RedisEvent. " +
                             "Please refer to the error above if there is any.");
                     return;
                 }
 
-                if (clazz.equals(ResponseEvent.class)) {
-                    ResponseEvent responseEvent = Statics.getMain().getGson().fromJson(event, ResponseEvent.class);
+                if (redisEvent.getClass().equals(ResponseEvent.class)) {
+                    ResponseEvent responseEvent = (ResponseEvent) redisEvent;
                     if (!shouldReceive(responseEvent)) {
                         debugger.receiveNotAllowed(channel);
                         return;
@@ -147,7 +144,6 @@ public class RedisManager {
                 }
 
                 new Thread(() -> {
-                    RedisEvent<?> redisEvent = Statics.getMain().getGson().fromJson(event, clazz);
                     if (!shouldReceive(redisEvent)) {
                         debugger.receiveNotAllowed(channel);
                         return;

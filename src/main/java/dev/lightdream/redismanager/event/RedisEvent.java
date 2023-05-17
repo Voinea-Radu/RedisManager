@@ -33,6 +33,18 @@ public class RedisEvent<T> {
         this.className = getClassName();
     }
 
+    public static RedisEvent<?> deserialize(String data) {
+        RedisEvent<?> inferiorRedisEvent = Statics.getMain().getGson().fromJson(data, RedisEvent.class);
+        Class<? extends RedisEvent<?>> clazz = inferiorRedisEvent.getClassByName();
+
+        if (clazz == null) {
+            return null;
+        }
+
+        return Statics.getMain().getGson().fromJson(data, clazz);
+
+    }
+
     @SuppressWarnings("unchecked")
     public @Nullable Class<? extends RedisEvent<T>> getClassByName() {
         try {
@@ -121,7 +133,6 @@ public class RedisEvent<T> {
     public void sendAndExecute(ArgLambdaExecutor<T> success, LambdaExecutor fail) {
         ScheduleUtils.runTaskAsync(() -> sendAndExecuteSync(success, fail));
     }
-
 
     @SuppressWarnings({"unused", "UnusedReturnValue"})
     @SneakyThrows
