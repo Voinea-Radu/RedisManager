@@ -1,38 +1,19 @@
 package dev.lightdream.redismanager.manager;
 
-import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.SneakyThrows;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
-@SuppressWarnings("rawtypes")
 public class RedisEventManager {
 
+    private final List<EventObject> eventObjects = new ArrayList<>();
     private final RedisManager redisManager;
-
-    private final HashMap<
-            Class<? extends RedisEvent>,
-            List<HandlerObject>
-            > eventHandlers = new HashMap<>();
-
-    @Getter
-    @AllArgsConstructor
-    public static class HandlerObject{
-       private ArgLambdaExecutor executor;
-       private RedisEventHandler annotation;
-    }
 
     public RedisEventManager(RedisManager manager) {
         this.redisManager = manager;
@@ -41,76 +22,30 @@ public class RedisEventManager {
                 .forEach(method -> register(method, true));
     }
 
-    public <T extends RedisEvent> void register(Class<T> clazz, ArgLambdaExecutor<T> handler) {
-        register(clazz, handler, 0);
-    }
-
-    public <T extends RedisEvent> void register(Class<T> clazz, ArgLambdaExecutor<T> handler, int priority) {
-        List<HandlerObject> eventHandlers = this.eventHandlers.getOrDefault(clazz, new ArrayList<>());
-
-        HandlerObject handlerObject = new HandlerObject(handler, createRedisEventAnnotation(priority));
-
-        eventHandlers.add(handlerObject);
-        this.eventHandlers.put(clazz, eventHandlers);
-    }
-
-    @SuppressWarnings("unchecked")
     private void register(Method method, boolean fromConstructor) {
-        method.setAccessible(true);
-
         if (!method.isAnnotationPresent(RedisEventHandler.class)) {
             Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
                     " is not annotated with RedisEventHandler");
             return;
         }
 
-        RedisEventHandler redisEventAnnotation = method.getAnnotation(RedisEventHandler.class);
-        if (!redisEventAnnotation.autoRegister() && fromConstructor) {
-            return;
-        }
-
-        Class<?>[] params = method.getParameterTypes();
-
-        if (!Modifier.isStatic(method.getModifiers())) {
-            printError(method, "is not static");
-            return;
-        }
-
-        if (params.length != 1) {
-            printError(method, "does not meet the definition requirements. It must have one argument");
-            return;
-        }
-
-        Class<?> paramClass = params[0];
-
-        if (!RedisEvent.class.isAssignableFrom(paramClass)) {
-            printError(method, "has a parameter is not an instance of RedisEvent");
+        RedisEventHandler redisEventHandler = method.getAnnotation(RedisEventHandler.class);
+        if (!redisEventHandler.autoRegister() && fromConstructor) {
             return;
         }
 
         redisManager.getDebugger().registeringMethod(method.getName(), method.getDeclaringClass().getName());
 
-        Class<? extends RedisEvent> clazz = (Class<? extends RedisEvent>) paramClass;
-
-        List<HandlerObject> handlers = eventHandlers.getOrDefault(clazz, new ArrayList<>());
-
-        HandlerObject handlerObject = new HandlerObject(
-                event -> {
-                    try {
-                        method.invoke(null, event);
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                        Logger.error("There was an error executing a redis event");
-                    }
-                },
-                redisEventAnnotation
-        );
-
-        handlers.add(handlerObject);
-        eventHandlers.put(clazz, handlers);
+        EventObject eventObject = getEventClass(method.getDeclaringClass());
+        eventObject.register(method);
     }
 
     public void register(Object object) {
+        if (getEventObject(object.getClass()) == null) {
+            EventObject eventObject = new EventObject(object);
+            eventObjects.add(eventObject);
+        }
+
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
                 continue;
@@ -120,36 +55,130 @@ public class RedisEventManager {
         }
     }
 
-    @SuppressWarnings({"unused", "unchecked"})
-    public void fire(RedisEvent event) {
-        List<HandlerObject> handlers = eventHandlers.getOrDefault(event.getClass(), new ArrayList<>());
-        handlers.sort(Comparator.comparingInt(o -> o.getAnnotation().priority()));
+    public void unregister(Object object) {
+        eventObjects.removeIf(eventObject -> eventObject.parentObject.equals(object));
+    }
 
-        for (HandlerObject handlerObject :handlers) {
-            handlerObject.getExecutor().execute(event);
+    @SuppressWarnings("deprecation")
+    @SneakyThrows
+    private EventObject getEventClass(Class<?> clazz) {
+        EventObject eventObject = getEventObject(clazz);
+        if (eventObject != null) {
+            return eventObject;
+        }
+
+        eventObject = new EventObject(clazz.newInstance());
+        eventObjects.add(eventObject);
+        return eventObject;
+    }
+
+    private EventObject getEventObject(Class<?> clazz) {
+        for (EventObject eventObject : eventObjects) {
+            if (eventObject.parentObject.getClass().equals(clazz)) {
+                return eventObject;
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings({"rawtypes", "unused"})
+    public void fire(RedisEvent event) {
+        for (EventObject eventObject : eventObjects) {
+            eventObject.fire(event);
         }
     }
 
-    private void printError(Method method, String text) {
-        Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() + " " + text);
+    public static class EventObject {
+        public Object parentObject;
+        public List<EventClass> eventClasses = new ArrayList<>();
+
+        private EventObject(Object parentObject) {
+            this.parentObject = parentObject;
+        }
+
+        private void register(Method method) {
+            Class<?>[] params = method.getParameterTypes();
+
+            if (params.length != 1) {
+                Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
+                        " has more than one parameter");
+                return;
+            }
+
+            Class<?> paramClass = params[0];
+
+            if (!RedisEvent.class.isAssignableFrom(paramClass)) {
+                Logger.warn("Parameter from method " + method.getName() + " from class " + method.getDeclaringClass() +
+                        " is not an instance of RedisEvent");
+                return;
+            }
+
+            //noinspection unchecked,rawtypes
+            Class<? extends RedisEvent> clazz = (Class<? extends RedisEvent>) paramClass;
+
+            EventClass eventClass = getEventClass(clazz);
+            eventClass.register(method);
+        }
+
+        @SuppressWarnings("rawtypes")
+        private EventClass getEventClass(Class<? extends RedisEvent> clazz) {
+            for (EventClass eventClass : eventClasses) {
+                if (eventClass.eventClass.equals(clazz)) {
+                    return eventClass;
+                }
+            }
+            EventClass eventClass = new EventClass(clazz);
+            eventClasses.add(eventClass);
+            return eventClass;
+        }
+
+        @SuppressWarnings("rawtypes")
+        private void fire(RedisEvent event) {
+            for (EventClass eventClass : eventClasses) {
+                eventClass.fire(event, parentObject);
+            }
+        }
     }
 
-    private RedisEventHandler createRedisEventAnnotation(int priority){
-        return new RedisEventHandler() {
-            @Override
-            public Class<? extends Annotation> annotationType() {
-                return RedisEventHandler.class;
+    public static class EventClass {
+        @SuppressWarnings("rawtypes")
+        public Class<? extends RedisEvent> eventClass;
+        public List<Method> methods = new ArrayList<>();
+
+        @SuppressWarnings("rawtypes")
+        private EventClass(Class<? extends RedisEvent> eventClass) {
+            this.eventClass = eventClass;
+        }
+
+        private void register(Method method) {
+            if (methods.contains(method)) {
+                return;
+            }
+            methods.add(method);
+        }
+
+        @SuppressWarnings("rawtypes")
+        private void fire(RedisEvent event, Object parentObject) {
+            Class<?> clazz = event.getClassByName();
+            if (clazz == null) {
+                Logger.warn("#getClassByName method failed on object " + event);
+                clazz = event.getClass();
             }
 
-            @Override
-            public int priority() {
-                return priority;
+            if (eventClass.isAssignableFrom(clazz)) {
+                methods.sort((o1, o2) -> {
+                    RedisEventHandler annotation1 = o1.getAnnotation(RedisEventHandler.class);
+                    RedisEventHandler annotation2 = o2.getAnnotation(RedisEventHandler.class);
+                    return annotation1.priority() - annotation2.priority();
+                });
+                for (Method method : methods) {
+                    try {
+                        method.invoke(parentObject, eventClass.cast(event));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-
-            @Override
-            public boolean autoRegister() {
-                return false;
-            }
-        };
+        }
     }
 }
