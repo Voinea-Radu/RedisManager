@@ -5,23 +5,34 @@ import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+@SuppressWarnings("rawtypes")
 public class RedisEventManager {
 
     private final RedisManager redisManager;
 
-    @SuppressWarnings("rawtypes")
     private final HashMap<
             Class<? extends RedisEvent>,
-            List<ArgLambdaExecutor<? extends RedisEvent>>
+            List<HandlerObject>
             > eventHandlers = new HashMap<>();
+
+    @Getter
+    @AllArgsConstructor
+    public static class HandlerObject{
+       private ArgLambdaExecutor executor;
+       private RedisEventHandler annotation;
+    }
 
     public RedisEventManager(RedisManager manager) {
         this.redisManager = manager;
@@ -30,15 +41,20 @@ public class RedisEventManager {
                 .forEach(method -> register(method, true));
     }
 
-    @SuppressWarnings("rawtypes")
     public <T extends RedisEvent> void register(Class<T> clazz, ArgLambdaExecutor<T> handler) {
-        List<ArgLambdaExecutor<? extends RedisEvent>> eventHandlers =
-                this.eventHandlers.getOrDefault(clazz, new ArrayList<>());
-        eventHandlers.add(handler);
+        register(clazz, handler, 0);
+    }
+
+    public <T extends RedisEvent> void register(Class<T> clazz, ArgLambdaExecutor<T> handler, int priority) {
+        List<HandlerObject> eventHandlers = this.eventHandlers.getOrDefault(clazz, new ArrayList<>());
+
+        HandlerObject handlerObject = new HandlerObject(handler, createRedisEventAnnotation(priority));
+
+        eventHandlers.add(handlerObject);
         this.eventHandlers.put(clazz, eventHandlers);
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings("unchecked")
     private void register(Method method, boolean fromConstructor) {
         method.setAccessible(true);
 
@@ -48,8 +64,8 @@ public class RedisEventManager {
             return;
         }
 
-        RedisEventHandler redisEventHandler = method.getAnnotation(RedisEventHandler.class);
-        if (!redisEventHandler.autoRegister() && fromConstructor) {
+        RedisEventHandler redisEventAnnotation = method.getAnnotation(RedisEventHandler.class);
+        if (!redisEventAnnotation.autoRegister() && fromConstructor) {
             return;
         }
 
@@ -76,17 +92,21 @@ public class RedisEventManager {
 
         Class<? extends RedisEvent> clazz = (Class<? extends RedisEvent>) paramClass;
 
-        List<ArgLambdaExecutor<? extends RedisEvent>> handlers = eventHandlers.getOrDefault(clazz, new ArrayList<>());
+        List<HandlerObject> handlers = eventHandlers.getOrDefault(clazz, new ArrayList<>());
 
-        handlers.add(event -> {
-            try {
-                method.invoke(null, event);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-                Logger.error("There was an error executing a redis event");
-            }
-        });
+        HandlerObject handlerObject = new HandlerObject(
+                event -> {
+                    try {
+                        method.invoke(null, event);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                        Logger.error("There was an error executing a redis event");
+                    }
+                },
+                redisEventAnnotation
+        );
 
+        handlers.add(handlerObject);
         eventHandlers.put(clazz, handlers);
     }
 
@@ -100,15 +120,36 @@ public class RedisEventManager {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked", "unused"})
+    @SuppressWarnings({"unused", "unchecked"})
     public void fire(RedisEvent event) {
-        for (ArgLambdaExecutor eventHandler :
-                eventHandlers.getOrDefault(event.getClass(), new ArrayList<>())) {
-            eventHandler.execute(event);
+        List<HandlerObject> handlers = eventHandlers.getOrDefault(event.getClass(), new ArrayList<>());
+        handlers.sort(Comparator.comparingInt(o -> o.getAnnotation().priority()));
+
+        for (HandlerObject handlerObject :handlers) {
+            handlerObject.getExecutor().execute(event);
         }
     }
 
     private void printError(Method method, String text) {
         Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() + " " + text);
+    }
+
+    private RedisEventHandler createRedisEventAnnotation(int priority){
+        return new RedisEventHandler() {
+            @Override
+            public Class<? extends Annotation> annotationType() {
+                return RedisEventHandler.class;
+            }
+
+            @Override
+            public int priority() {
+                return priority;
+            }
+
+            @Override
+            public boolean autoRegister() {
+                return false;
+            }
+        };
     }
 }
