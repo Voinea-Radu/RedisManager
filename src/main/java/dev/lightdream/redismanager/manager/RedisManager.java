@@ -46,6 +46,11 @@ public class RedisManager {
         redisEventManager.register(listener);
     }
 
+    @SuppressWarnings("unused")
+    public void unregister(Object listener) {
+        redisEventManager.unregister(listener);
+    }
+
     private void connectJedis() {
         if (jedisPool != null) {
             jedisPool.destroy();

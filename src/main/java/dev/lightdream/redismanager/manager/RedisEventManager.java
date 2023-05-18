@@ -173,6 +173,7 @@ public class RedisEventManager {
                 });
                 for (Method method : methods) {
                     try {
+                        method.setAccessible(true);
                         method.invoke(parentObject, eventClass.cast(event));
                     } catch (Exception e) {
                         e.printStackTrace();
