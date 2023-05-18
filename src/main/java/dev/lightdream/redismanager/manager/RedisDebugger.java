@@ -95,7 +95,6 @@ public class RedisDebugger {
                 .parse());
     }
 
-
     private void print(String message) {
         if (!enabled) {
             return;
