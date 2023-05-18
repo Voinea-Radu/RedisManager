@@ -1,6 +1,5 @@
 package dev.lightdream.redismanager.manager;
 
-import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisConfig;
@@ -45,11 +44,6 @@ public class RedisManager {
     @SuppressWarnings("unused")
     public void register(Object listener) {
         redisEventManager.register(listener);
-    }
-
-    @SuppressWarnings({"rawtypes", "unused"})
-    public <E extends RedisEvent> void register(Class<E> clazz, ArgLambdaExecutor<E> method) {
-        redisEventManager.register(clazz, method);
     }
 
     private void connectJedis() {
