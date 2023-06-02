@@ -98,6 +98,10 @@ public class RedisEventManager {
         });
 
         for (EventMethod eventMethod : eventMethods) {
+            if(!event.getClass().isAssignableFrom(eventMethod.eventClass)){
+                continue;
+            }
+
             eventMethod.method.setAccessible(true);
             eventMethod.method.invoke(eventMethod.parentObject, eventMethod.eventClass.cast(event));
         }
