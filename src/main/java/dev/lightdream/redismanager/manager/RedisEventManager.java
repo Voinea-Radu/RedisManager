@@ -99,7 +99,7 @@ public class RedisEventManager {
 
         for (EventMethod eventMethod : eventMethods) {
             eventMethod.method.setAccessible(true);
-            eventMethod.method.invoke(eventMethod.parentObject, event);
+            eventMethod.method.invoke(eventMethod.parentObject, eventMethod.eventClass.cast(event));
         }
     }
 
