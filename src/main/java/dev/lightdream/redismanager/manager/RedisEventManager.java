@@ -97,10 +97,9 @@ public class RedisEventManager {
             return annotation1.priority() - annotation2.priority();
         });
 
-        for (EventMethod eventMethod : eventMethods) {
-            if(!event.getClass().isAssignableFrom(eventMethod.eventClass)){
-                continue;
-            }
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < eventMethods.size(); i++) {
+            EventMethod eventMethod = eventMethods.get(i);
 
             eventMethod.method.setAccessible(true);
             eventMethod.method.invoke(eventMethod.parentObject, eventMethod.eventClass.cast(event));
