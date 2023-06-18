@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface RedisEventHandler {
 
-    int priority() default 0;
+    int order() default 0;
 
     boolean autoRegister() default false;
 

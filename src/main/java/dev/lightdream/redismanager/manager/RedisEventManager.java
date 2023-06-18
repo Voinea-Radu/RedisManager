@@ -94,7 +94,7 @@ public class RedisEventManager {
         eventMethods.sort((o1, o2) -> {
             RedisEventHandler annotation1 = o1.method.getAnnotation(RedisEventHandler.class);
             RedisEventHandler annotation2 = o2.method.getAnnotation(RedisEventHandler.class);
-            return annotation1.priority() - annotation2.priority();
+            return annotation1.order() - annotation2.order();
         });
 
         //noinspection ForLoopReplaceableByForEach
