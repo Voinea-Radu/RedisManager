@@ -14,4 +14,4 @@ reflections = { module = "org.reflections:reflections", version = "0.10.2" }
 # LightDream
 lightdream_logger = { module = "dev.lightdream:logger", version = "3.3.12" }
 lightdream_lambda = { module = "dev.lightdream:lambda", version = "4.1.19" }
-lightdream_messagebuilder = { module = "dev.lightdream:message-builder", version = "3.1.12" }
+lightdream_messagebuilder = { module = "dev.lightdream:message-builder", version = "3.1.13" }
