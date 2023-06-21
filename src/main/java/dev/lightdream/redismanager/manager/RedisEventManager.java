@@ -20,12 +20,12 @@ public class RedisEventManager {
         this.redisManager = manager;
         Statics.getMain().getReflections()
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
-                .forEach(method -> register(method, true));
+                .forEach(method -> register(method, true, null));
     }
 
     @SneakyThrows
     @SuppressWarnings("rawtypes")
-    private void register(Method method, boolean fromConstructor) {
+    private void register(Method method, boolean fromConstructor, Object parentObject) {
         if (!method.isAnnotationPresent(RedisEventHandler.class)) {
             Logger.error("Method " + method.getName() + " from class " + method.getDeclaringClass() +
                     " is not annotated with RedisEventHandler");
@@ -39,17 +39,18 @@ public class RedisEventManager {
 
         redisManager.getDebugger().registeringMethod(method.getName(), method.getDeclaringClass().getName());
 
-        Object parentObject = null;
-        Class<?> parentClass = method.getDeclaringClass();
-
-        for (EventMethod eventMethod : eventMethods) {
-            if (eventMethod.parentObject.getClass().equals(parentClass)) {
-                parentObject = eventMethod.parentObject;
-            }
-        }
-
         if (parentObject == null) {
-            parentObject = parentClass.getConstructor().newInstance();
+            Class<?> parentClass = method.getDeclaringClass();
+
+            for (EventMethod eventMethod : eventMethods) {
+                if (eventMethod.parentObject.getClass().equals(parentClass)) {
+                    parentObject = eventMethod.parentObject;
+                }
+            }
+
+            if (parentObject == null) {
+                parentObject = parentClass.getConstructor().newInstance();
+            }
         }
 
         Class<?>[] params = method.getParameterTypes();
@@ -79,7 +80,7 @@ public class RedisEventManager {
                 continue;
             }
 
-            register(declaredMethod, false);
+            register(declaredMethod, false, object);
         }
     }
 
@@ -101,7 +102,7 @@ public class RedisEventManager {
         for (int i = 0; i < eventMethods.size(); i++) {
             EventMethod eventMethod = eventMethods.get(i);
 
-            if(!event.getClass().isAssignableFrom(eventMethod.eventClass)){
+            if (!event.getClass().isAssignableFrom(eventMethod.eventClass)) {
                 continue;
             }
 
