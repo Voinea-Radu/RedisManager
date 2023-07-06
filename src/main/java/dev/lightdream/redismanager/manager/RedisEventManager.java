@@ -9,11 +9,12 @@ import lombok.SneakyThrows;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class RedisEventManager {
 
-    private final List<EventMethod> eventMethods = new ArrayList<>();
+    private final List<EventMethod> eventMethods = Collections.synchronizedList(new ArrayList<>());
     private final RedisManager redisManager;
 
     public RedisEventManager(RedisManager manager) {
