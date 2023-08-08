@@ -2,17 +2,19 @@ package dev.lightdream.redismanager.event.impl;
 
 import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.event.RedisEvent;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
+@Getter
 public class ResponseEvent extends RedisEvent<Object> {
 
-    public String response;
-    public String responseClassName;
+    private String response;
+    private String responseClassName;
 
     public ResponseEvent(RedisEvent<?> command, Object response) {
-        super(command.originator);
-        this.id = command.id;
+        super(command.getOriginator());
+        this.setId(command.getId());
 
         if (response == null) {
             this.response = "";

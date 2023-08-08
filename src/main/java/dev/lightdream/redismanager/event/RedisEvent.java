@@ -5,31 +5,36 @@ import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.lambda.lambda.LambdaExecutor;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
+import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * @param <T> The type of the response
  */
+@Getter
 public class RedisEvent<T> {
 
-    public int id = -1;
-    public String className;
-    public String originator = "UNKNOWN";
-    public String redisTarget = "*";
+    private @Setter long id = -1;
+    private final String className;
+    private @Setter String originator = "UNKNOWN";
+    private String redisTarget;
 
     /**
-     * @param redisTarget the redis target that will listen for this event. You can use * for all.
+     * @param redisID the redis target that will listen for this event. You can use * for all.
      */
-    public RedisEvent(String redisTarget) {
+    public RedisEvent(String redisID) {
         this();
-        this.redisTarget = redisTarget;
+        setRedisTarget(redisID);
     }
 
     public RedisEvent() {
+        setRedisTarget("*");
         this.className = getClassName();
     }
 
@@ -45,6 +50,14 @@ public class RedisEvent<T> {
 
     }
 
+    public void setRedisTarget(String redisID) {
+        if (redisID.contains("#")) {
+            this.redisTarget = redisID;
+        } else {
+            this.redisTarget = RedisMain.getRedisMain().getRedisConfig().getChannelBase() + "#" + redisID;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public @Nullable Class<? extends RedisEvent<T>> getClassByName() {
         try {
@@ -54,6 +67,7 @@ public class RedisEvent<T> {
                     "the exact class exists in the project. If you want to have different classes in the sender and " +
                     "receiver override RedisEvent#getClassName and specify the class name there.");
             if (Debugger.isEnabled()) {
+                //noinspection CallToPrintStackTrace
                 e.printStackTrace();
             }
             return null;
@@ -69,7 +83,7 @@ public class RedisEvent<T> {
      * Does NOT send it to the redis target
      */
     public void fireEvent() {
-        Statics.getMain().getRedisManager().redisEventManager.fire(this);
+        Statics.getMain().getRedisManager().getRedisEventManager().fire(this);
     }
 
     @Override
@@ -159,6 +173,18 @@ public class RedisEvent<T> {
         Statics.getMain().getRedisManager().getAwaitingResponses().remove(response);
 
         return response;
+    }
+
+    @SuppressWarnings("unused")
+    public String getRedisTargetID() {
+        String[] split = redisTarget.split("#");
+        return split[split.length - 1];
+    }
+
+    @SuppressWarnings("unused")
+    public String getOriginatorID() {
+        String[] split = originator.split("#");
+        return split[split.length - 1];
     }
 
 }
