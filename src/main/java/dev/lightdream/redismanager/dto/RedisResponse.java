@@ -1,22 +1,21 @@
 package dev.lightdream.redismanager.dto;
 
-import com.google.gson.annotations.Expose;
 import dev.lightdream.redismanager.Statics;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 
 @NoArgsConstructor
+@Getter
 public class RedisResponse<T> {
 
-    public int id;
-    @Expose
+    private long id;
     private T response;
-    @Expose
     private String responseClassName;
     private boolean finished = false;
     private boolean timeout = false;
 
-    public RedisResponse(int id) {
+    public RedisResponse(long id) {
         this.id = id;
     }
 
@@ -40,11 +39,10 @@ public class RedisResponse<T> {
     }
 
     public void respondUnsafe(String objectJson, String responseClass) {
-
         this.responseClassName = responseClass;
         T object;
 
-        if (objectJson.equals("") || responseClass.equals("")) {
+        if (objectJson.isEmpty() || responseClass.isEmpty()) {
             object = null;
         } else {
             object = Statics.getMain().getGson().fromJson(objectJson, getResponseClassName());
@@ -65,10 +63,6 @@ public class RedisResponse<T> {
             return null;
         }
         return (Class<T>) Class.forName(responseClassName);
-    }
-
-    public boolean isFinished() {
-        return finished;
     }
 
     @Override

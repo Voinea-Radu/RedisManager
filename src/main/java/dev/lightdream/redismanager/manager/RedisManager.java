@@ -3,7 +3,6 @@ package dev.lightdream.redismanager.manager;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
-import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.RedisEvent;
@@ -24,13 +23,12 @@ public class RedisManager {
 
     private final @Getter Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
     private final @Getter RedisDebugger debugger;
-
-    public RedisEventManager redisEventManager;
+    private final @Getter RedisEventManager redisEventManager;
 
     private JedisPool jedisPool;
     private Thread redisTread = null;
     private JedisPubSub subscriberJedisPubSub;
-    private int id = 0;
+    private long id = 0;
 
     @SuppressWarnings("unused")
     public RedisManager() {
@@ -68,7 +66,7 @@ public class RedisManager {
     private RedisResponse<?> getResponse(ResponseEvent command) {
         //Remove streams, these are slow when called a lot
         for (RedisResponse response : awaitingResponses) {
-            if (response.id == command.id) {
+            if (response.getId() == command.getId()) {
                 return response;
             }
         }
@@ -113,7 +111,7 @@ public class RedisManager {
                     if (response == null) {
                         return;
                     }
-                    response.respondUnsafe(responseEvent.response, responseEvent.responseClassName);
+                    response.respondUnsafe(responseEvent.getResponse(), responseEvent.getResponseClassName());
 
                     return;
                 }
@@ -147,7 +145,7 @@ public class RedisManager {
         redisTread = new Thread(() -> {
             try (Jedis subscriberJedis = jedisPool.getResource()) {
                 subscriberJedis.subscribe(subscriberJedisPubSub, getConfig().getChannel(),
-                        getConfig().getChannelBase() + "*");
+                        getConfig().getChannelBase() + "#*");
             } catch (Exception e) {
                 Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
                 if (debugger.isEnabled()) {
@@ -167,18 +165,18 @@ public class RedisManager {
     }
 
     public <T> RedisResponse<T> send(RedisEvent<T> event) {
-        event.originator = getConfig().getChannel();
+        event.setOriginator(getConfig().getChannel());
 
-        if (event.redisTarget.equals(event.originator)) {
+        if (event.getRedisTarget().equals(event.getOriginator())) {
             redisEventManager.fire(event);
             return null;
         }
 
         if (event instanceof ResponseEvent) {
-            debugger.sendResponse(getConfig().getChannel(), event.serialize());
+            debugger.sendResponse(event.getRedisTarget(), event.serialize());
 
             try (Jedis jedis = jedisPool.getResource()) {
-                jedis.publish(getConfig().getChannel(), event.serialize());
+                jedis.publish(event.getRedisTarget(), event.serialize());
             } catch (Exception e) {
                 if (debugger.isEnabled()) {
                     //noinspection CallToPrintStackTrace
@@ -190,14 +188,14 @@ public class RedisManager {
         }
 
         id++;
-        event.id = id;
-        debugger.send(getConfig().getChannel(), event.serialize());
+        event.setId(id);
+        debugger.send(event.getRedisTarget(), event.serialize());
 
-        RedisResponse<T> redisResponse = new RedisResponse<>(event.id);
+        RedisResponse<T> redisResponse = new RedisResponse<>(event.getId());
         awaitingResponses.add(redisResponse);
 
         try (Jedis jedis = jedisPool.getResource()) {
-            jedis.publish(getConfig().getChannel(), event.serialize());
+            jedis.publish(event.getRedisTarget(), event.serialize());
         } catch (JedisConnectionException e) {
             throw new RuntimeException("Unable to publish channel message", e);
         }
