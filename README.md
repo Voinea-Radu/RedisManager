@@ -1,7 +1,7 @@
 # RedisManager
 
 ![Build](../../actions/workflows/build.yml/badge.svg)
-![Version](https://img.shields.io/badge/Version-3.1.9-red.svg)
+![Version](https://img.shields.io/badge/Version-3.1.10-red.svg)
 
 # Table Of Contents
 
@@ -40,12 +40,12 @@ com.github.L1ghtDream instead of dev.lightdream)
     <dependency>
         <groupId>dev.lightdream</groupId>
         <artifactId>redis-manager</artifactId>
-        <version>3.1.9</version>
+        <version>3.1.10</version>
     </dependency>
     <dependency>
         <groupId>com.github.L1ghtDream</groupId>
         <artifactId>redis-manager</artifactId>
-        <version>3.1.9</version>
+        <version>3.1.10</version>
     </dependency>
 </dependencies>
 ```
@@ -59,8 +59,8 @@ repositories {
 }
 
 dependencies {
-    implementation "dev.lightdream:redis-manager:3.1.9"
-    implementation "com.github.L1ghtDream:redis-manager:3.1.9"
+    implementation "dev.lightdream:redis-manager:3.1.10"
+    implementation "com.github.L1ghtDream:redis-manager:3.1.10"
 }
 ```
 
@@ -73,8 +73,8 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.lightdream:redis-manager:3.1.9")
-    implementation("com.github.L1ghtDream:redis-manager:3.1.9")
+    implementation("dev.lightdream:redis-manager:3.1.10")
+    implementation("com.github.L1ghtDream:redis-manager:3.1.10")
 }
 ```
 
