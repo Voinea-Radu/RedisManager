@@ -2,6 +2,7 @@ package dev.lightdream.redismanager.manager;
 
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
+import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.RedisEvent;
@@ -17,6 +18,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+@SuppressWarnings("LombokGetterMayBeUsed")
 public class RedisManager {
     private final Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
     private final @Getter RedisDebugger debugger;
@@ -102,13 +104,14 @@ public class RedisManager {
                 try {
                     onMessageReceive(channel, command);
                 } catch (Throwable t) {
+                    //noinspection CallToPrintStackTrace
                     t.printStackTrace();
                     Logger.error("There was an error while receiving a message from Redis.");
                 }
             }
 
             public void onMessageReceive(String channel, final String event) {
-                if (event.trim().length() == 0) {
+                if (event.trim().isEmpty()) {
                     return;
                 }
 
@@ -173,6 +176,7 @@ public class RedisManager {
             } catch (Exception e) {
                 Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
                 if (debugger.isEnabled()) {
+                    //noinspection CallToPrintStackTrace
                     e.printStackTrace();
                 }
                 try {
@@ -195,6 +199,11 @@ public class RedisManager {
     public <T> RedisResponse<T> send(RedisEvent<T> event) {
         event.originator = config().getRedisID();
 
+        if(event.redisTarget.equals(event.originator)){
+            Statics.getMain().getRedisManager().redisEventManager.fire(event);
+            return null;
+        }
+
         if (event instanceof ResponseEvent) {
             debugger.sendResponse(config().getChannel(), event.serialize());
 
@@ -202,6 +211,7 @@ public class RedisManager {
                 jedis.publish(config().getChannel(), event.serialize());
             } catch (Exception e) {
                 if (debugger.isEnabled()) {
+                    //noinspection CallToPrintStackTrace
                     e.printStackTrace();
                 }
             }
@@ -209,7 +219,8 @@ public class RedisManager {
             return null;
         }
 
-        event.id = ++id;
+        id++;
+        event.id = id;
         debugger.send(config().getChannel(), event.serialize());
 
         RedisResponse<T> redisResponse = new RedisResponse<>(event.id);
