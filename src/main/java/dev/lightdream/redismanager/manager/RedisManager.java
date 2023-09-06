@@ -25,7 +25,7 @@ public class RedisManager {
     private final @Getter RedisDebugger debugger;
     private final @Getter RedisEventManager redisEventManager;
 
-    private JedisPool jedisPool;
+    private @Getter JedisPool jedisPool;
     private Thread redisTread = null;
     private JedisPubSub subscriberJedisPubSub;
     private long id = 0;
@@ -58,7 +58,8 @@ public class RedisManager {
                 getConfig().getHost(),
                 getConfig().getPort(),
                 0,
-                getConfig().getPassword());
+                getConfig().getPassword()
+        );
     }
 
     @SuppressWarnings("rawtypes")
