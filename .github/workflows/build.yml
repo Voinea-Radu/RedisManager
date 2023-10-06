@@ -88,7 +88,7 @@ jobs:
             build/libs/*.jar
 
       - name: Commit any changes made to the repo
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Incremented patch version
           commit_options: '--no-verify --signoff'
