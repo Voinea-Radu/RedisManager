@@ -12,6 +12,8 @@ public class RedisResponse<T> {
     private long id;
     private T response;
     private String responseClassName;
+
+    // State
     private boolean finished = false;
     private boolean timeout = false;
 

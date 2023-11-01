@@ -1,6 +1,6 @@
 package dev.lightdream.redismanager.event;
 
-import dev.lightdream.lambda.ScheduleUtils;
+import dev.lightdream.lambda.ScheduleManager;
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.lambda.lambda.LambdaExecutor;
 import dev.lightdream.logger.Debugger;
@@ -20,8 +20,8 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public class RedisEvent<T> {
 
-    private @Setter long id = -1;
     private final String className;
+    private @Setter long id = -1;
     private @Setter String originator = "UNKNOWN";
     private String redisTarget;
 
@@ -145,7 +145,7 @@ public class RedisEvent<T> {
     }
 
     public void sendAndExecute(ArgLambdaExecutor<T> success, LambdaExecutor fail) {
-        ScheduleUtils.runTaskAsync(() -> sendAndExecuteSync(success, fail));
+        ScheduleManager.get().runTaskAsync(() -> sendAndExecuteSync(success, fail));
     }
 
     @SuppressWarnings({"unused", "UnusedReturnValue"})

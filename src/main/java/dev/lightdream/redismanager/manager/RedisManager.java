@@ -1,5 +1,6 @@
 package dev.lightdream.redismanager.manager;
 
+import dev.lightdream.lambda.ScheduleManager;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
@@ -18,7 +19,6 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@SuppressWarnings("LombokGetterMayBeUsed")
 public class RedisManager {
 
     private final @Getter Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
@@ -117,10 +117,10 @@ public class RedisManager {
                     return;
                 }
 
-                new Thread(() -> {
+                ScheduleManager.get().runTaskAsync(()->{
                     debugger.receive(channel, event);
                     redisEvent.fireEvent();
-                }).start();
+                });
             }
 
             @Override
