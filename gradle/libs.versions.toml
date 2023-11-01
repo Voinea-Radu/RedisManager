@@ -1,5 +1,5 @@
 [versions]
-project = "4.0.19"
+project = "4.0.22"
 
 [libraries]
 # Redis
