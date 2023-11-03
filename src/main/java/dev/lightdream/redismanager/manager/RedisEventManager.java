@@ -75,6 +75,7 @@ public class RedisEventManager {
         eventMethods.add(eventMethod);
     }
 
+    @SuppressWarnings("unused")
     public void register(Object object) {
         for (Method declaredMethod : object.getClass().getDeclaredMethods()) {
             if (!declaredMethod.isAnnotationPresent(RedisEventHandler.class)) {
@@ -85,6 +86,7 @@ public class RedisEventManager {
         }
     }
 
+    @SuppressWarnings("unused")
     public void unregister(Object object) {
         eventMethods.removeIf(eventObject -> eventObject.parentObject.equals(object));
     }
