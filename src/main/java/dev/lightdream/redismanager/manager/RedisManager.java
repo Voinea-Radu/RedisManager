@@ -32,17 +32,19 @@ public class RedisManager {
 
     @SuppressWarnings("unused")
     public RedisManager() {
-        this(false);
+        this(false, false);
     }
 
-    public RedisManager(boolean debug) {
+    public RedisManager(boolean debug, boolean localOnly) {
         debugger = new RedisDebugger(debug);
 
         redisEventManager = new RedisEventManager(this);
         debugger.creatingListener(getConfig().getChannel());
 
-        connectJedis();
-        subscribe();
+        if(!localOnly){
+            connectJedis();
+            subscribe();
+        }
     }
 
     private void connectJedis() {
@@ -112,7 +114,7 @@ public class RedisManager {
                     if (response == null) {
                         return;
                     }
-                    response.respondUnsafe(responseEvent.getResponse(), responseEvent.getResponseClassName());
+                    response.respond(responseEvent);
 
                     return;
                 }
@@ -168,12 +170,22 @@ public class RedisManager {
     public <T> RedisResponse<T> send(RedisEvent<T> event) {
         event.setOriginator(getConfig().getChannel());
 
-        if (event.getRedisTarget().equals(event.getOriginator())) {
-            redisEventManager.fire(event);
-            return null;
-        }
-
         if (event instanceof ResponseEvent) {
+            if (event.getRedisTarget().equals(event.getOriginator())) {
+                debugger.sendResponse("LOCAL", event.serialize());
+                redisEventManager.fire(event);
+
+                ResponseEvent responseEvent = (ResponseEvent) event;
+
+                RedisResponse<?> response = getResponse(responseEvent);
+                if (response == null) {
+                    return null;
+                }
+                response.respond(responseEvent);
+
+                return null;
+            }
+
             debugger.sendResponse(event.getRedisTarget(), event.serialize());
 
             try (Jedis jedis = jedisPool.getResource()) {
@@ -190,10 +202,18 @@ public class RedisManager {
 
         id++;
         event.setId(id);
-        debugger.send(event.getRedisTarget(), event.serialize());
 
         RedisResponse<T> redisResponse = new RedisResponse<>(event.getId());
         awaitingResponses.add(redisResponse);
+
+        if (event.getRedisTarget().equals(event.getOriginator())) {
+            debugger.send("LOCAL", event.serialize());
+            redisEventManager.fire(event);
+
+            return redisResponse;
+        }
+
+        debugger.send(event.getRedisTarget(), event.serialize());
 
         try (Jedis jedis = jedisPool.getResource()) {
             jedis.publish(event.getRedisTarget(), event.serialize());

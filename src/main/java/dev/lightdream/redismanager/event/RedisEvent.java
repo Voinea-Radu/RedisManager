@@ -38,6 +38,7 @@ public class RedisEvent<T> {
         this.className = getClassName();
     }
 
+    //TODO Move type adapter
     public static RedisEvent<?> deserialize(String data) {
         RedisEvent<?> inferiorRedisEvent = Statics.getMain().getGson().fromJson(data, RedisEvent.class);
         Class<? extends RedisEvent<?>> clazz = inferiorRedisEvent.getClassByName();

@@ -30,9 +30,25 @@ dependencies {
     // Annotations
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
+    testCompileOnly(libs.lombok)
+    testAnnotationProcessor(libs.lombok)
+
     api(libs.jetbrains.annotations)
     annotationProcessor(libs.jetbrains.annotations)
+    testCompileOnly(libs.jetbrains.annotations)
+    testAnnotationProcessor(libs.jetbrains.annotations)
 
+    // Tests
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
 }
 
 configurations.all {

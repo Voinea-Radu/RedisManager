@@ -1,9 +1,12 @@
 package dev.lightdream.redismanager.dto;
 
 import dev.lightdream.redismanager.Statics;
+import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
+
+import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -40,17 +43,22 @@ public class RedisResponse<T> {
         markAsFinished();
     }
 
-    public void respondUnsafe(String objectJson, String responseClass) {
-        this.responseClassName = responseClass;
-        T object;
-
-        if (objectJson.isEmpty() || responseClass.isEmpty()) {
-            object = null;
-        } else {
-            object = Statics.getMain().getGson().fromJson(objectJson, getResponseClassName());
+    public void respond(ResponseEvent response) {
+        if (response.getResponse().isEmpty() || response.getResponseClassName().isEmpty()) {
+            respond(null, response.getResponseClassName());
+            return;
         }
 
-        respond(object, responseClass);
+        if (response.getResponseClass().isAssignableFrom(List.class)) {
+            //noinspection unchecked
+            T object = (T) response.deserialize();
+            respond(object, response.getResponseClassName());
+            //TODO
+        }
+
+        //noinspection unchecked
+        T object = (T) Statics.getMain().getGson().fromJson(response.getResponse(), response.getResponseClass());
+        respond(object, response.getResponseClassName());
     }
 
     @SuppressWarnings("unused")
@@ -58,7 +66,7 @@ public class RedisResponse<T> {
         return response;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "unused"})
     @SneakyThrows
     public Class<T> getResponseClassName() {
         if (responseClassName == null) {
