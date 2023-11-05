@@ -19,6 +19,7 @@ dependencies {
     api(libs.lightdream.logger)
     api(libs.lightdream.lambda)
     api(libs.lightdream.messagebuilder)
+    api(libs.lightdream.filemanager)
 
     // Jedis
     api(libs.jedis)

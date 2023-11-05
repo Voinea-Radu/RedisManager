@@ -53,7 +53,7 @@ public class RedisResponse<T> {
             //noinspection unchecked
             T object = (T) response.deserialize();
             respond(object, response.getResponseClassName());
-            //TODO
+            return;
         }
 
         //noinspection unchecked

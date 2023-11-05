@@ -37,7 +37,7 @@ public class ResponseEvent extends RedisEvent<Object> {
             ArrayList<?> list = (ArrayList<?>) response;
 
             if (list.isEmpty()) {
-                additionalData = EMPTY_LIST; // TODO To static storage
+                additionalData = EMPTY_LIST;
                 return;
             }
 

@@ -1,6 +1,8 @@
 package dev.lightdream.redismanager;
 
 import com.google.gson.Gson;
+import dev.lightdream.filemanager.FileManager;
+import dev.lightdream.filemanager.FileManagerMain;
 import dev.lightdream.logger.LoggableMain;
 import dev.lightdream.logger.Logger;
 import dev.lightdream.messagebuilder.MessageBuilder;
@@ -11,24 +13,24 @@ import org.reflections.Reflections;
 import org.reflections.scanners.Scanners;
 import org.reflections.util.ConfigurationBuilder;
 
-public class TestRedisMain implements RedisMain, LoggableMain {
+public class TestRedisMain implements RedisMain, LoggableMain, FileManagerMain {
 
     private final RedisManager redisManager;
     private final Reflections reflections;
     private final RedisConfig config;
-    private final Gson gson;
 
     public TestRedisMain() {
-        initializeRedisMain();
         Logger.init(this);
+        new FileManager(this).setStatic();
         MessageBuilder.init();
+
+        initializeRedisMain();
 
         reflections = new Reflections(
                 new ConfigurationBuilder()
                         .forPackages("dev.lightdream.redismanager")
                         .setScanners(Scanners.MethodsAnnotated, Scanners.TypesAnnotated, Scanners.SubTypes)
         );
-        gson = new Gson();
         config = new RedisConfig();
 
         redisManager = new RedisManager(true, true);
@@ -51,11 +53,19 @@ public class TestRedisMain implements RedisMain, LoggableMain {
 
     @Override
     public @NotNull Gson getGson() {
-        return gson;
+        if (FileManager.get() == null) {
+            return new Gson();
+        }
+        return FileManager.get().getGson();
     }
 
     @Override
     public boolean debugToConsole() {
         return true;
+    }
+
+    @Override
+    public @NotNull String getPath() {
+        return "";
     }
 }

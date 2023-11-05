@@ -3,12 +3,11 @@ package dev.lightdream.redismanager.event;
 import dev.lightdream.lambda.ScheduleManager;
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.lambda.lambda.LambdaExecutor;
-import dev.lightdream.logger.Debugger;
-import dev.lightdream.logger.Logger;
 import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -18,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
  * @param <T> The type of the response
  */
 @Getter
+@AllArgsConstructor
 public class RedisEvent<T> {
 
     private final String className;
@@ -35,20 +35,11 @@ public class RedisEvent<T> {
 
     public RedisEvent() {
         setRedisTarget("*");
-        this.className = getClassName();
+        this.className = getClass().getName();
     }
 
-    //TODO Move type adapter
     public static RedisEvent<?> deserialize(String data) {
-        RedisEvent<?> inferiorRedisEvent = Statics.getMain().getGson().fromJson(data, RedisEvent.class);
-        Class<? extends RedisEvent<?>> clazz = inferiorRedisEvent.getClassByName();
-
-        if (clazz == null) {
-            return null;
-        }
-
-        return Statics.getMain().getGson().fromJson(data, clazz);
-
+        return Statics.getMain().getGson().fromJson(data, RedisEvent.class);
     }
 
     public void setRedisTarget(String redisID) {
@@ -57,26 +48,6 @@ public class RedisEvent<T> {
         } else {
             this.redisTarget = RedisMain.getRedisMain().getRedisConfig().getChannelBase() + "#" + redisID;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public @Nullable Class<? extends RedisEvent<T>> getClassByName() {
-        try {
-            return (Class<? extends RedisEvent<T>>) Class.forName(className);
-        } catch (Throwable e) {
-            Logger.error("Class " + className + " was not found in the current JVM context. Please make sure" +
-                    "the exact class exists in the project. If you want to have different classes in the sender and " +
-                    "receiver override RedisEvent#getClassName and specify the class name there.");
-            if (Debugger.isEnabled()) {
-                //noinspection CallToPrintStackTrace
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
-
-    public String getClassName() {
-        return getClass().getName();
     }
 
     /**
