@@ -18,5 +18,5 @@ lightdream_messagebuilder = { module = "dev.lightdream:message-builder", version
 lightdream_filemanager = { module = "dev.lightdream:file-manager", version = "2.7.20" }
 
 # Testing
-junit_jupiter = { module = "org.junit.jupiter:junit-jupiter ", version = "5.10.0" }
-junit_bom = { module = "org.junit:junit-bom", version = "5.10.0" }
+junit_jupiter = { module = "org.junit.jupiter:junit-jupiter ", version = "5.10.1" }
+junit_bom = { module = "org.junit:junit-bom", version = "5.10.1" }
