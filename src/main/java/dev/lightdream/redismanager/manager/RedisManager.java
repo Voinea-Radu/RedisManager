@@ -1,15 +1,18 @@
 package dev.lightdream.redismanager.manager;
 
+import dev.lightdream.filemanager.GsonSettings;
 import dev.lightdream.lambda.ScheduleManager;
 import dev.lightdream.logger.Debugger;
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.RedisMain;
 import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.RedisEvent;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
+import dev.lightdream.redismanager.type_adapter.RedisEventTypeAdapter;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.jetbrains.annotations.Nullable;
+import org.reflections.Reflections;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -19,32 +22,113 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+@Getter
+@Accessors(chain = true, fluent = true)
 public class RedisManager {
 
-    private final @Getter Queue<RedisResponse<?>> awaitingResponses = new ConcurrentLinkedQueue<>();
-    private final @Getter RedisDebugger debugger;
-    private final @Getter RedisEventManager redisEventManager;
+    private static @Getter RedisManager instance;
 
-    private @Getter JedisPool jedisPool;
-    private Thread redisTread = null;
+    private final Queue<RedisResponse<?>> awaitingResponses;
+    private final RedisEventManager redisEventManager;
+    private final RedisDebugger debugger;
+    private final GsonSettings gsonSettings;
+    private final RedisConfig redisConfig;
+    private final Reflections reflections;
+    private final boolean debug;
+    private final boolean localOnly;
+    private JedisPool jedisPool;
+    private Thread redisTread;
     private JedisPubSub subscriberJedisPubSub;
-    private long id = 0;
+    private long id;
 
-    @SuppressWarnings("unused")
-    public RedisManager() {
-        this(false, false);
-    }
+    @lombok.Builder(builderClassName = "Builder")
+    public RedisManager(GsonSettings gsonSettings, RedisConfig redisConfig, Reflections reflections, boolean debug,
+                        boolean localOnly) {
+        instance = this;
 
-    public RedisManager(boolean debug, boolean localOnly) {
-        debugger = new RedisDebugger(debug);
+        this.gsonSettings = gsonSettings;
+        this.redisConfig = redisConfig;
+        this.reflections = reflections;
+        this.debug = debug;
+        this.localOnly = localOnly;
 
-        redisEventManager = new RedisEventManager(this);
-        debugger.creatingListener(getConfig().getChannel());
+        debugger = new RedisDebugger(debug());
+        debugger.creatingListener(redisConfig().getChannel());
+        redisEventManager = new RedisEventManager();
+        awaitingResponses = new ConcurrentLinkedQueue<>();
 
-        if(!localOnly){
+        new RedisEventTypeAdapter().register(gsonSettings);
+
+        if (!localOnly()) {
             connectJedis();
             subscribe();
         }
+    }
+
+    public static Builder builder() {
+        return new Builder()
+                .gsonSettings(new GsonSettings() )
+                .redisConfig(new RedisConfig())
+                .reflections(new Reflections())
+                .debug(false)
+                .localOnly(false);
+    }
+
+    public <T> RedisResponse<T> send(RedisEvent<T> event) {
+        event.setOriginator(redisConfig().getChannel());
+
+        if (event instanceof ResponseEvent) {
+            if (event.getRedisTarget().equals(event.getOriginator())) {
+                debugger.sendResponse("LOCAL", event.serialize());
+                redisEventManager.fire(event);
+
+                ResponseEvent responseEvent = (ResponseEvent) event;
+
+                RedisResponse<?> response = getResponse(responseEvent);
+                if (response == null) {
+                    return null;
+                }
+                response.respond(responseEvent);
+
+                return null;
+            }
+
+            debugger.sendResponse(event.getRedisTarget(), event.serialize());
+
+            try (Jedis jedis = jedisPool.getResource()) {
+                jedis.publish(event.getRedisTarget(), event.serialize());
+            } catch (Exception e) {
+                if (debugger.isEnabled()) {
+                    //noinspection CallToPrintStackTrace
+                    e.printStackTrace();
+                }
+            }
+
+            return null;
+        }
+
+        id++;
+        event.setId(id);
+
+        RedisResponse<T> redisResponse = new RedisResponse<>(event.getId());
+        awaitingResponses.add(redisResponse);
+
+        if (event.getRedisTarget().equals(event.getOriginator())) {
+            debugger.send("LOCAL", event.serialize());
+            redisEventManager.fire(event);
+
+            return redisResponse;
+        }
+
+        debugger.send(event.getRedisTarget(), event.serialize());
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.publish(event.getRedisTarget(), event.serialize());
+        } catch (JedisConnectionException e) {
+            throw new RuntimeException("Unable to publish channel message", e);
+        }
+
+        return redisResponse;
     }
 
     private void connectJedis() {
@@ -55,12 +139,12 @@ public class RedisManager {
         JedisPoolConfig jedisConfig = new JedisPoolConfig();
         jedisConfig.setMaxTotal(16);
 
-        this.jedisPool = new JedisPool(
+        jedisPool = new JedisPool(
                 jedisConfig,
-                getConfig().getHost(),
-                getConfig().getPort(),
+                redisConfig().getHost(),
+                redisConfig().getPort(),
                 0,
-                getConfig().getPassword()
+                redisConfig().getPassword()
         );
     }
 
@@ -119,7 +203,7 @@ public class RedisManager {
                     return;
                 }
 
-                ScheduleManager.get().runTaskAsync(()->{
+                ScheduleManager.runTaskAsync(() -> {
                     debugger.receive(channel, event);
                     redisEvent.fireEvent();
                 });
@@ -140,15 +224,15 @@ public class RedisManager {
         startRedisThread();
     }
 
-    public void startRedisThread() {
+    private void startRedisThread() {
         if (redisTread != null) {
             redisTread.interrupt();
         }
 
         redisTread = new Thread(() -> {
             try (Jedis subscriberJedis = jedisPool.getResource()) {
-                subscriberJedis.subscribe(subscriberJedisPubSub, getConfig().getChannel(),
-                        getConfig().getChannelBase() + "#*");
+                subscriberJedis.subscribe(subscriberJedisPubSub, redisConfig().getChannel(),
+                        redisConfig().getChannelBase() + "#*");
             } catch (Exception e) {
                 Logger.error("Lost connection to redis server. Retrying in 3 seconds...");
                 if (debugger.isEnabled()) {
@@ -165,66 +249,5 @@ public class RedisManager {
             }
         });
         redisTread.start();
-    }
-
-    public <T> RedisResponse<T> send(RedisEvent<T> event) {
-        event.setOriginator(getConfig().getChannel());
-
-        if (event instanceof ResponseEvent) {
-            if (event.getRedisTarget().equals(event.getOriginator())) {
-                debugger.sendResponse("LOCAL", event.serialize());
-                redisEventManager.fire(event);
-
-                ResponseEvent responseEvent = (ResponseEvent) event;
-
-                RedisResponse<?> response = getResponse(responseEvent);
-                if (response == null) {
-                    return null;
-                }
-                response.respond(responseEvent);
-
-                return null;
-            }
-
-            debugger.sendResponse(event.getRedisTarget(), event.serialize());
-
-            try (Jedis jedis = jedisPool.getResource()) {
-                jedis.publish(event.getRedisTarget(), event.serialize());
-            } catch (Exception e) {
-                if (debugger.isEnabled()) {
-                    //noinspection CallToPrintStackTrace
-                    e.printStackTrace();
-                }
-            }
-
-            return null;
-        }
-
-        id++;
-        event.setId(id);
-
-        RedisResponse<T> redisResponse = new RedisResponse<>(event.getId());
-        awaitingResponses.add(redisResponse);
-
-        if (event.getRedisTarget().equals(event.getOriginator())) {
-            debugger.send("LOCAL", event.serialize());
-            redisEventManager.fire(event);
-
-            return redisResponse;
-        }
-
-        debugger.send(event.getRedisTarget(), event.serialize());
-
-        try (Jedis jedis = jedisPool.getResource()) {
-            jedis.publish(event.getRedisTarget(), event.serialize());
-        } catch (JedisConnectionException e) {
-            throw new RuntimeException("Unable to publish channel message", e);
-        }
-
-        return redisResponse;
-    }
-
-    private RedisConfig getConfig() {
-        return RedisMain.getRedisMain().getRedisConfig();
     }
 }

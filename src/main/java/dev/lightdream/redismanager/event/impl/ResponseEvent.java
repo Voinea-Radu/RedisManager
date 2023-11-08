@@ -1,8 +1,8 @@
 package dev.lightdream.redismanager.event.impl;
 
 import com.google.gson.reflect.TypeToken;
-import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.event.RedisEvent;
+import dev.lightdream.redismanager.manager.RedisManager;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -30,7 +30,7 @@ public class ResponseEvent extends RedisEvent<Object> {
             return;
         }
 
-        this.response = Statics.getMain().getGson().toJson(response);
+        this.response = RedisManager.instance().gsonSettings().gson().toJson(response);
         this.responseClassName = response.getClass().getName();
 
         if (response.getClass().isAssignableFrom(List.class)) {
@@ -56,10 +56,11 @@ public class ResponseEvent extends RedisEvent<Object> {
 
             Class<?> aditionalClass = Class.forName(additionalData);
 
-            return Statics.getMain().getGson().fromJson(response, TypeToken.getParameterized(List.class, aditionalClass));
+            return RedisManager.instance().gsonSettings().gson()
+                    .fromJson(response, TypeToken.getParameterized(List.class, aditionalClass));
         }
 
-        return Statics.getMain().getGson().fromJson(response, clazz);
+        return RedisManager.instance().gsonSettings().gson().fromJson(response, clazz);
     }
 
     @SneakyThrows(value = {ClassNotFoundException.class})

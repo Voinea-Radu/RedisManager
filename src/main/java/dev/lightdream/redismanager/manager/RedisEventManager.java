@@ -1,7 +1,6 @@
 package dev.lightdream.redismanager.manager;
 
 import dev.lightdream.logger.Logger;
-import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.annotation.RedisEventHandler;
 import dev.lightdream.redismanager.event.RedisEvent;
 import lombok.AllArgsConstructor;
@@ -15,11 +14,9 @@ import java.util.List;
 public class RedisEventManager {
 
     private final List<EventMethod> eventMethods = Collections.synchronizedList(new ArrayList<>());
-    private final RedisManager redisManager;
 
-    public RedisEventManager(RedisManager manager) {
-        this.redisManager = manager;
-        Statics.getMain().getReflections()
+    public RedisEventManager() {
+        RedisManager.instance().reflections()
                 .getMethodsAnnotatedWith(RedisEventHandler.class)
                 .forEach(method -> register(method, true, null));
     }
@@ -38,7 +35,7 @@ public class RedisEventManager {
             return;
         }
 
-        redisManager.getDebugger().registeringMethod(method.getName(), method.getDeclaringClass().getName());
+        RedisManager.instance().debugger().registeringMethod(method.getName(), method.getDeclaringClass().getName());
 
         if (parentObject == null) {
             Class<?> parentClass = method.getDeclaringClass();

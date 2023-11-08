@@ -1,7 +1,7 @@
 package dev.lightdream.redismanager.dto;
 
-import dev.lightdream.redismanager.Statics;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
+import dev.lightdream.redismanager.manager.RedisManager;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
@@ -57,7 +57,8 @@ public class RedisResponse<T> {
         }
 
         //noinspection unchecked
-        T object = (T) Statics.getMain().getGson().fromJson(response.getResponse(), response.getResponseClass());
+        T object = (T) RedisManager.instance().gsonSettings().gson()
+                .fromJson(response.getResponse(), response.getResponseClass());
         respond(object, response.getResponseClassName());
     }
 

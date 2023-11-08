@@ -1,8 +1,19 @@
 package dev.lightdream.redismanager;
 
+import dev.lightdream.filemanager.FileManager;
+import dev.lightdream.filemanager.GsonSerializer;
+import dev.lightdream.filemanager.GsonSettings;
+import dev.lightdream.logger.Debugger;
+import dev.lightdream.logger.Printer;
+import dev.lightdream.messagebuilder.MessageBuilderManager;
+import dev.lightdream.redismanager.dto.RedisConfig;
 import dev.lightdream.redismanager.event.RedisEvent;
+import dev.lightdream.redismanager.manager.RedisManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,16 +22,40 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class RedisTest {
 
-    private static TestRedisMain main;
-
     @BeforeAll
     public static void init() {
-        main = new TestRedisMain();
+        GsonSettings gsonSettings = new GsonSettings();
+
+        Reflections reflections = new Reflections(
+                new ConfigurationBuilder()
+                        .forPackages("dev.lightdream.redismanager")
+                        .setScanners(Scanners.MethodsAnnotated, Scanners.TypesAnnotated, Scanners.SubTypes)
+        );
+
+        Printer.builder()
+                .debugToConsole(true)
+                .build();
+
+        Debugger.log("HERE");
+        Debugger.log(reflections.getSubTypesOf(GsonSerializer.class));
+
+        FileManager.builder()
+                .gsonSettings(gsonSettings)
+                .build();
+
+        MessageBuilderManager.builder().build();
+
+        RedisManager.builder()
+                .gsonSettings(gsonSettings)
+                .redisConfig(new RedisConfig())
+                .reflections(reflections)
+                .localOnly(true)
+                .build();
     }
 
     @Test
     public void simpleEvent1() {
-        SimpleEvent1 event1 = new SimpleEvent1(main, 25, 10);
+        SimpleEvent1 event1 = new SimpleEvent1(25, 10);
         Integer result = event1.sendAndGet();
 
         assertEquals(35, result);
@@ -28,7 +63,7 @@ public class RedisTest {
 
     @Test
     public void simpleEvent2() {
-        SimpleEvent2 event1 = new SimpleEvent2(main, Arrays.asList("test1", "test2"), "-");
+        SimpleEvent2 event1 = new SimpleEvent2( Arrays.asList("test1", "test2"), "-");
         String result = event1.sendAndGet();
 
         assertEquals("test1-test2-", result);
@@ -36,7 +71,7 @@ public class RedisTest {
 
     @Test
     public void complexEvent1() {
-        ComplexEvent1 event1 = new ComplexEvent1(main, Arrays.asList("test1", "test2"), "test3");
+        ComplexEvent1 event1 = new ComplexEvent1(Arrays.asList("test1", "test2"), "test3");
         List<String> result = event1.sendAndGet();
 
         assertNotNull(result);
@@ -65,7 +100,7 @@ public class RedisTest {
 
     @Test
     public void testGsonImplementation2() {
-        ComplexEvent1 event = new ComplexEvent1(main, Arrays.asList("test1", "test2"), "test3");
+        ComplexEvent1 event = new ComplexEvent1( Arrays.asList("test1", "test2"), "test3");
         event.setId(100);
         event.setOriginator("test_env");
 
