@@ -10,7 +10,7 @@ import java.util.List;
 
 @NoArgsConstructor
 @Getter
-public class RedisResponse<T> {
+public class RedisResponse<T> implements ISerializable {
 
     private long id;
     private T response;
@@ -78,7 +78,7 @@ public class RedisResponse<T> {
 
     @Override
     public String toString() {
-        throw new RuntimeException(getClass().getName() + "#toString has been called. Please use #serialzie instead");
+        return serialize();
     }
 
 }

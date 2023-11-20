@@ -3,6 +3,7 @@ package dev.lightdream.redismanager.event;
 import dev.lightdream.lambda.ScheduleManager;
 import dev.lightdream.lambda.lambda.ArgLambdaExecutor;
 import dev.lightdream.lambda.lambda.LambdaExecutor;
+import dev.lightdream.redismanager.dto.ISerializable;
 import dev.lightdream.redismanager.dto.RedisResponse;
 import dev.lightdream.redismanager.event.impl.ResponseEvent;
 import dev.lightdream.redismanager.manager.RedisManager;
@@ -17,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @Getter
 @AllArgsConstructor
-public class RedisEvent<T> {
+public class RedisEvent<T> implements ISerializable {
 
     private final String className;
     private @Setter long id = -1;
@@ -59,11 +60,7 @@ public class RedisEvent<T> {
 
     @Override
     public String toString() {
-        throw new RuntimeException(getClass().getName() + "#toString has been called. Please use #serialzie instead");
-    }
-
-    public String serialize() {
-        return RedisManager.instance().gsonSettings().gson().toJson(this);
+        return serialize();
     }
 
     @SuppressWarnings("unused")
