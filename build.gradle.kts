@@ -76,9 +76,9 @@ publishing {
         val githubUsername = project.findProperty("github.auth.username") ?: ""
         val githubPassword = project.findProperty("github.auth.password") ?: ""
 
-        val selfURL = project.findProperty("self.url") ?: ""
-        val selfUsername = project.findProperty("self.auth.username") ?: ""
-        val selfPassword = project.findProperty("self.auth.password") ?: ""
+        val lightdreamURL = project.findProperty("lightdream.url") ?: ""
+        val lightdreamUsername = project.findProperty("lightdream.auth.username") ?: ""
+        val lightdreamPassword = project.findProperty("lightdream.auth.password") ?: ""
 
         maven(url = githubURL as String) {
             name = "github"
@@ -88,11 +88,11 @@ publishing {
             }
         }
 
-        maven(url = selfURL as String) {
+        maven(url = lightdreamURL as String) {
             name = "self"
             credentials(PasswordCredentials::class) {
-                username = selfUsername as String
-                password = selfPassword as String
+                username = lightdreamUsername as String
+                password = lightdreamPassword as String
             }
         }
     }

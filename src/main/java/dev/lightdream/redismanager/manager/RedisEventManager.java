@@ -6,6 +6,7 @@ import dev.lightdream.redismanager.event.RedisEvent;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,10 +89,8 @@ public class RedisEventManager {
         eventMethods.removeIf(eventObject -> eventObject.parentObject.equals(object));
     }
 
-    @SneakyThrows
     @SuppressWarnings({"rawtypes", "unused"})
     public void fire(RedisEvent event) {
-
         eventMethods.sort((o1, o2) -> {
             RedisEventHandler annotation1 = o1.method.getAnnotation(RedisEventHandler.class);
             RedisEventHandler annotation2 = o2.method.getAnnotation(RedisEventHandler.class);
@@ -107,7 +106,17 @@ public class RedisEventManager {
             }
 
             eventMethod.method.setAccessible(true);
-            eventMethod.method.invoke(eventMethod.parentObject, eventMethod.eventClass.cast(event));
+            try {
+                eventMethod.method.invoke(eventMethod.parentObject, eventMethod.eventClass.cast(event));
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                Logger.error("Error while firing event " + event.getClass().getName());
+                Logger.error("parentObject class:" + eventMethod.parentObject.getClass().getName());
+                Logger.error("parentObject:" + eventMethod.parentObject);
+                Logger.error("eventClass:" + eventMethod.eventClass.getName());
+                Logger.error("event class:" + event.getClassName());
+                Logger.error("event:" + event.serialize());
+            }
         }
     }
 
