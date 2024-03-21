@@ -110,11 +110,11 @@ public class RedisEventManager {
                 eventMethod.method.invoke(eventMethod.parentObject, eventMethod.eventClass.cast(event));
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
+                e.getCause().printStackTrace();
                 Logger.error("Error while firing event " + event.getClass().getName());
                 Logger.error("parentObject class:" + eventMethod.parentObject.getClass().getName());
                 Logger.error("parentObject:" + eventMethod.parentObject);
                 Logger.error("eventClass:" + eventMethod.eventClass.getName());
-                Logger.error("event class:" + event.getClassName());
                 Logger.error("event:" + event.serialize());
             }
         }
