@@ -1,3 +1,6 @@
+# Migrated to [Voinea-Radu/Utils](https://github.com/Voinea-Radu/Utils)
+Please consider checking out the update and maintained repository that also contains this utility
+
 # RedisManager
 
 ![Build](../../actions/workflows/build.yml/badge.svg)
